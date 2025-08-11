@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dicely - Agentic Dice</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 auto 15px;
+            display: block;
+            text-align: center;
+            width: fit-content;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin: 0 auto 30px;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0 10px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status.disconnected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .status.connected {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .status.bridged {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .die {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            position: relative;
+        }
+
+        .die:hover {
+            border-color: #2196f3;
+            transform: scale(1.05);
+        }
+
+        .die.kept {
+            background: #e8f5e8;
+            border-color: #4caf50;
+        }
+
+        .die.kept::after {
+            content: '✓';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: #4caf50;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .die.rolling {
+            animation: roll 0.5s ease-in-out;
+        }
+
+        @keyframes roll {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(90deg);
+            }
+
+            50% {
+                transform: rotate(180deg);
+            }
+
+            75% {
+                transform: rotate(270deg);
+            }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .roll-btn {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .roll-btn:hover {
+            background-color: #1976d2;
+        }
+
+        .roll-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .reset-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .keep-all-btn,
+        .clear-keep-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .keep-all-btn:hover,
+        .clear-keep-btn:hover {
+            background-color: #388e3c;
+        }
+
+        .game-info {
+            text-align: center;
+            margin: 0 0 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .dice-summary {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .agent-config {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .config-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 10px 0;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #2196f3;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #1976d2;
+        }
+
+        .learn-more {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .learn-more a {
+            color: #2196f3;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .learn-more a:hover {
+            text-decoration: underline;
+        }
+
+        #snappjack-circle {
+            position: relative;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        #snappjack-circle::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(#667eea, #764ba2, #667eea);
+        }
+
+        .snappjack-active::before {
+            animation: gradientRotate 2s linear infinite;
+        }
+
+        @keyframes gradientRotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div
+            style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); margin: 20px 0;">
+            <div class="demo-tag">Snappjack Demo App</div>
+            <h1>🎲 Dicely - Agentic Dice</h1>
+            <p class="subtitle">A simple app demonstrating how web applications can provide both a traditional GUI for
+                direct user interaction and expose functionality through the <a href="https://www.snappjack.com"
+                    target="_blank" rel="noopener">Snappjack</a> SDK, enabling AI agents to connect to live sessions via
+                the standard MCP protocol.</p>
+            <div class="game-info">
+                <div class="dice-summary">
+                    <span id="dice-status">Click dice to keep them, then roll the rest!</span>
+                </div>
+            </div>
+
+            <div class="dice-container" id="dice-container">
+                <!-- Dice will be generated by JavaScript -->
+            </div>
+
+            <div class="controls">
+                <button class="keep-all-btn" onclick="keepAllDice()">Keep All</button>
+                <button class="clear-keep-btn" onclick="clearKeptDice()">Clear Kept</button>
+                <button class="roll-btn" id="roll-btn" onclick="rollDice()">Roll Dice</button>
+                <button class="reset-btn" onclick="resetDice()">Reset</button>
+            </div>
+        </div>
+
+        <div
+            style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); margin: 0px 0;">
+            <h4 style="margin: 0 0 15px 0; color: #333; text-align: center;">Connection Status</h4>
+            <div
+                style="display: flex; justify-content: center; align-items: center; padding: 10px; position: relative;">
+                <div style="text-align: center; padding: 10px; position: relative;">
+                    <div
+                        style="width: 80px; height: 80px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid #ddd;">
+                        <span style="font-size: 32px;">🤖</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 500; color: #555;">Agent</div>
+                </div>
+
+                <div
+                    style="flex: 1; max-width: 150px; position: relative; display: flex; align-items: center; margin: 0 10px; margin-top: -25px;">
+                    <div id="agent-snappjack-line"
+                        style="width: 100%; height: 4px; background: #ccc; border-radius: 2px;"></div>
+                </div>
+
+                <div style="text-align: center; padding: 10px; position: relative;">
+                    <div id="snappjack-circle"
+                        style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid #667eea;">
+                        <span style="font-size: 14px; font-weight: bold; color: white;">SJ</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 500; color: #555;">Snappjack</div>
+                </div>
+
+                <div
+                    style="flex: 1; max-width: 150px; position: relative; display: flex; align-items: center; margin: 0 10px; margin-top: -25px;">
+                    <div id="snappjack-dicely-line"
+                        style="width: 100%; height: 4px; background: #f44336; border-radius: 2px;"></div>
+                </div>
+
+                <div style="text-align: center; padding: 10px; position: relative;">
+                    <div
+                        style="width: 80px; height: 80px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid #ddd;">
+                        <span style="font-size: 32px;">🎲</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 500; color: #555;">Dicely</div>
+                </div>
+            </div>
+            <!-- <div id="connection-status-text" style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">Waiting for connections...</div> -->
+        </div>
+
+        <div id="status" class="status disconnected" style="display: none;">
+            Snappjack Status: Disconnected
+        </div>
+
+        <div
+            style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+            <p style="margin: 0; color: #1565c0; font-size: 15px; line-height: 1.5;">
+                <strong>Two Ways to Play:</strong> Use the buttons above to interact directly with the dice, or scroll
+                down to connect an AI agent and give it instructions to play for you.
+            </p>
+        </div>
+
+        <div id="agent-tools"
+            style="margin-top: 40px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #2196f3;">
+            <h3 style="margin-top: 0; color: #1976d2;">🔧 Available Tools for AI Agents</h3>
+            <p style="margin-bottom: 15px;">Once connected, AI agents can interact with this app using the following
+                tools:</p>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                <li><code
+                        style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px;">dicely.systemInfo.get</code>
+                    - Get system information and current app state</li>
+                <li><code style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px;">dicely.dice.plan</code> -
+                    Set which dice to keep or roll (array of 5 actions)</li>
+                <li><code style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px;">dicely.dice.roll</code> -
+                    Execute the roll for non-kept dice</li>
+                <li><code style="background: #e3f2fd; padding: 2px 6px; border-radius: 3px;">dicely.dice.reset</code> -
+                    Reset all dice to initial state</li>
+            </ul>
+        </div>
+
+        <div id="agent-config" class="agent-config" style="display: none;">
+            <h3>🤖 Connect Your AI Agent</h3>
+            <p>Use any of the following methods to connect an AI agent to this live session:</p>
+
+            <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 5px; border: 1px solid #ddd;">
+                <h4 style="margin-top: 0; color: #555;">Method 1: Direct Connection Parameters</h4>
+                <p style="color: #666; font-size: 14px;">Use these values for platforms that require manual
+                    configuration (e.g., n8n, custom integrations):</p>
+                <div style="margin: 10px 0;">
+                    <label style="font-weight: bold; color: #333;">MCP Endpoint URL:</label>
+                    <div style="display: flex; align-items: center; margin-top: 5px;">
+                        <input id="mcp-url" type="text" readonly
+                            style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace; font-size: 13px;">
+                        <button onclick="copyToClipboard('mcp-url', event)"
+                            style="margin-left: 8px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 3px; cursor: pointer; display: flex; align-items: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div style="margin: 10px 0;">
+                    <label style="font-weight: bold; color: #333;">API Key:</label>
+                    <div style="display: flex; align-items: center; margin-top: 5px;">
+                        <input id="api-key" type="text" readonly
+                            style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace; font-size: 13px;">
+                        <button onclick="copyToClipboard('api-key', event)"
+                            style="margin-left: 8px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 3px; cursor: pointer; display: flex; align-items: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <p style="color: #888; font-size: 12px; margin-top: 10px;">Transport Type: HTTP (with Bearer token
+                    authentication)</p>
+            </div>
+
+            <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 5px; border: 1px solid #ddd;">
+                <h4 style="margin-top: 0; color: #555;">Method 2: JSON Configuration</h4>
+                <p style="color: #666; font-size: 14px;">Add to your MCP settings file (Claude Desktop, Cursor, LM
+                    Studio, Jan.ai, etc.):</p>
+                <div id="config-code" class="config-code"></div>
+                <button onclick="copyConfig(event)" class="copy-btn">Copy JSON Configuration</button>
+            </div>
+
+            <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 5px; border: 1px solid #ddd;">
+                <h4 style="margin-top: 0; color: #555;">Method 3: Claude CLI</h4>
+                <p style="color: #666; font-size: 14px;">For Claude CLI users, run this command:</p>
+                <div id="cli-command" class="config-code" style="margin: 10px 0;"></div>
+                <button onclick="copyCLICommand(event)" class="copy-btn">Copy CLI Command</button>
+            </div>
+        </div>
+
+        <div class="learn-more">
+            <a href="https://www.snappjack.com" target="_blank" rel="noopener">
+                🔗 Learn more about Snappjack
+            </a>
+        </div>
+    </div>
+
+    <!-- Include the Snappjack SDK -->
+    <script src="/sdk/snappjack.js"></script>
+
+    <script>
+        // Game state
+        let diceValues = [null, null, null, null, null];
+        let keptDice = [false, false, false, false, false];
+        let isRolling = false;
+
+        // UI elements
+        let status = document.getElementById('status');
+        let diceContainer = document.getElementById('dice-container');
+        let rollBtn = document.getElementById('roll-btn');
+
+        // Snappjack instance
+        let snappjack = null;
+
+        // Initialize the game
+        function initializeGame() {
+            createDiceElements();
+            updateDiceDisplay();
+            updateGameInfo();
+        }
+
+        // Create dice DOM elements
+        function createDiceElements() {
+            diceContainer.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const die = document.createElement('div');
+                die.className = 'die';
+                die.id = `die-${i}`;
+                die.onclick = () => toggleKeepDie(i);
+                diceContainer.appendChild(die);
+            }
+        }
+
+        // Update the visual display of dice
+        function updateDiceDisplay() {
+            for (let i = 0; i < 5; i++) {
+                const die = document.getElementById(`die-${i}`);
+                die.textContent = diceValues[i] === null ? '-' : diceValues[i];
+                die.className = keptDice[i] ? 'die kept' : 'die';
+            }
+        }
+
+        // Update game info display
+        function updateGameInfo() {
+            const keptCount = keptDice.filter(kept => kept).length;
+            const rollingCount = 5 - keptCount;
+
+            const statusEl = document.getElementById('dice-status');
+            const allNull = diceValues.every(v => v === null);
+
+            if (allNull) {
+                statusEl.textContent = "Roll the dice to begin!";
+                rollBtn.disabled = false;
+            } else if (keptCount === 5) {
+                statusEl.textContent = "All dice kept! Reset to roll again.";
+                rollBtn.disabled = true;
+            } else if (keptCount === 0) {
+                statusEl.textContent = "Click dice to keep them, then roll the rest!";
+                rollBtn.disabled = false;
+            } else {
+                statusEl.textContent = `${keptCount} dice kept, ${rollingCount} will be rolled.`;
+                rollBtn.disabled = false;
+            }
+        }
+
+        // Toggle keeping a specific die
+        function toggleKeepDie(index) {
+            if (isRolling) return;
+
+            // Don't allow keeping null dice
+            if (diceValues[index] === null) return;
+
+            keptDice[index] = !keptDice[index];
+            updateDiceDisplay();
+            updateGameInfo();
+        }
+
+        // Keep all dice
+        function keepAllDice() {
+            if (isRolling) return;
+
+            // Only keep dice that have been rolled (not null)
+            for (let i = 0; i < 5; i++) {
+                if (diceValues[i] !== null) {
+                    keptDice[i] = true;
+                }
+            }
+            updateDiceDisplay();
+            updateGameInfo();
+        }
+
+        // Clear all kept dice
+        function clearKeptDice() {
+            if (isRolling) return;
+
+            keptDice.fill(false);
+            updateDiceDisplay();
+            updateGameInfo();
+        }
+
+        // Roll the dice (user action)
+        async function rollDice() {
+            if (isRolling) return;
+
+            const indicesToRoll = [];
+            for (let i = 0; i < 5; i++) {
+                if (!keptDice[i]) {
+                    indicesToRoll.push(i);
+                }
+            }
+
+            if (indicesToRoll.length === 0) {
+                return;
+            }
+
+            await performRoll(indicesToRoll, 'Human');
+        }
+
+        // Perform the actual rolling animation and logic
+        // If newValues are provided, use those instead of generating new ones
+        function performRoll(indicesToRoll, source, newValues = null) {
+            return new Promise((resolve) => {
+                isRolling = true;
+                rollBtn.disabled = true;
+
+                // Add rolling animation
+                indicesToRoll.forEach(index => {
+                    document.getElementById(`die-${index}`).classList.add('rolling');
+                });
+
+                // Simulate rolling delay
+                setTimeout(() => {
+                    // Generate new values for non-kept dice if not provided
+                    if (!newValues) {
+                        newValues = indicesToRoll.map(() => Math.floor(Math.random() * 6) + 1);
+                    }
+
+                    // Apply the new values
+                    indicesToRoll.forEach((index, i) => {
+                        diceValues[index] = newValues[i];
+                    });
+
+                    // Remove rolling animation
+                    indicesToRoll.forEach(index => {
+                        document.getElementById(`die-${index}`).classList.remove('rolling');
+                    });
+
+                    updateDiceDisplay();
+                    updateGameInfo();
+
+                    isRolling = false;
+                    rollBtn.disabled = (keptDice.filter(kept => kept).length === 5);
+
+                    resolve(newValues);
+                }, 500);
+            });
+        }
+
+        // Reset the dice
+        function resetDice() {
+            if (isRolling) return;
+
+            diceValues = [null, null, null, null, null];
+            keptDice = [false, false, false, false, false];
+            updateDiceDisplay();
+            updateGameInfo();
+        }
+
+        // Initialize Snappjack
+        function initializeSnappjack() {
+            // Define the tools this dice roller provides with their handlers
+            const tools = [
+                {
+                    name: 'dicely.systemInfo.get',
+                    description: 'Get system information and current state. Call this first to understand the system and current app state.',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {},
+                        required: []
+                    },
+                    handler: async (args) => {
+                        const message = (await handleInitialize()).message;
+                        // Return system documentation with the current state
+                        return {
+                            content: [{
+                                type: 'text',
+                                text: message
+                            }]
+                        };
+                    }
+                },
+                {
+                    name: 'dicely.dice.plan',
+                    description: 'Set the plan for each die. Pass array of 5 actions ("keep" or "roll").',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {
+                            actions: {
+                                type: 'array',
+                                items: { type: 'string', enum: ['keep', 'roll'] },
+                                minItems: 5,
+                                maxItems: 5,
+                                description: 'Array of 5 actions, one for each die ("keep" or "roll")'
+                            }
+                        },
+                        required: ['actions']
+                    },
+                    handler: async (args) => {
+                        const message = (await handlePlanStrategy(args.actions)).message;
+                        return {
+                            content: [{
+                                type: 'text',
+                                text: message
+                            }]
+                        };
+                    }
+                },
+                {
+                    name: 'dicely.dice.reset',
+                    description: 'Reset all dice. Clears values and sets all dice to roll.',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {},
+                        required: []
+                    },
+                    handler: async (args) => {
+                        const message = handleReset().message;
+                        return {
+                            content: [{
+                                type: 'text',
+                                text: message
+                            }]
+                        };
+                    }
+                },
+                {
+                    name: 'dicely.dice.roll',
+                    description: 'Roll all dice not marked as "keep".',
+                    inputSchema: {
+                        type: 'object',
+                        properties: {},
+                        required: []
+                    },
+                    handler: async (args) => {
+                        const message = (await handleRollDice()).message;
+                        return {
+                            content: [{
+                                type: 'text',
+                                text: message
+                            }]
+                        };
+                    }
+                }
+            ];
+
+            // Create Snappjack instance - server URL is automatically detected
+            snappjack = new Snappjack({
+                appId: 'dicely',
+                userId: 'demo-user',
+                apiKey: 'wak_7b95bb10b2804d64',
+                tools: tools,
+                autoReconnect: true
+            });
+
+            // Set up event listeners
+            snappjack.on('status', (event) => {
+                const newStatus = event.detail;
+                updateStatus(newStatus);
+            });
+
+            snappjack.on('user-api-key-generated', (event) => {
+                const connectionData = event.detail;
+                displayAgentInstructions(connectionData);
+                console.log('Dicely demo app connected via Snappjack!');
+            });
+
+            // Connect to Snappjack
+            snappjack.connect().catch((error) => {
+                console.error('Connection failed:', error);
+            });
+        }
+
+        function getCurrentDiceState() {
+            const values = diceValues.map(v => v === null ? null : v);
+            const nextActions = keptDice.map(kept => kept ? 'keep' : 'roll');
+            const diceState = { values, nextActions };
+            const message = JSON.stringify(diceState);
+            return { message };
+        }
+
+        // Handle initialize tool call
+        async function handleInitialize() {
+            const currentDiceState = getCurrentDiceState().message;
+            const parsedState = JSON.parse(currentDiceState);
+            const hasNullDice = parsedState.values.some(v => v === null);
+
+            const systemDoc = `DICELY DICE SYSTEM\n\nSystem Overview:\nThis system manages 5 dice (indexed 0-4). Each die can be individually controlled for keeping or rolling.\n\nCurrent State Structure:\n{values: [array of 5], nextAction: [array of 5]}\n- values: Die face values (1-6) or null if not yet rolled\n- nextAction: Planned action per die ("keep" or "roll")\n\nOperating Instructions:\n1. Check current state using this tool (dicely.systemInfo.get)\n2. To change which dice to keep/roll: call dicely.dice.plan with array of 5 actions\n   - Only call plan if you want to CHANGE the current nextAction state\n   - Example: ["keep", "keep", "roll", "roll", "roll"] keeps first two dice\n3. To execute a roll: call dicely.dice.roll\n   - This rolls all dice marked as "roll" in nextAction\n   - Kept dice retain their values\n4. To start fresh: call dicely.dice.reset (sets all values to null)\n\nImportant Rules:\n- Dice with null values MUST have nextAction set to "roll"\n- Cannot keep a die that hasn't been rolled yet\n- The nextAction state persists between calls until explicitly changed\n- You don't need to call plan before every roll - only when changing strategy'}`;
+
+            const message = systemDoc + '\n\nCurrent system state: ' + currentDiceState;
+            return { message };
+        }
+
+        // Handle plan strategy tool call
+        function handlePlanStrategy(actions) {
+            // Report if the actions parameter is not an array
+            if (!Array.isArray(actions)) {
+                throw new Error('the input actions parameter must be an array');
+            }
+
+            // Report if the actions array is not the correct length
+            if (actions.length !== 5) {
+                throw new Error('the input actions array must contain exactly 5 elements, one for each die');
+            }
+
+            // Report any invalid actions
+            const invalidActions = actions.filter(action => action !== 'keep' && action !== 'roll');
+            if (invalidActions.length > 0) {
+                throw new Error(`Invalid input actions in actions array: ${invalidActions.join(', ')}. Must be "keep" or "roll".`);
+            }
+
+            // Update keptDice based on actions, but don't allow keeping null dice
+            for (let i = 0; i < 5; i++) {
+                if (actions[i] === 'keep' && diceValues[i] !== null) {
+                    keptDice[i] = true;
+                } else if (actions[i] === 'roll') {
+                    keptDice[i] = false;
+                }
+            }
+            updateDiceDisplay();
+            updateGameInfo();
+
+            return getCurrentDiceState();
+        }
+
+        // Handle roll_dice tool call
+        async function handleRollDice() {
+            const indicesToRoll = keptDice.map((kept, index) => kept ? null : index).filter(index => index !== null);
+            if (indicesToRoll.length === 0) {
+                throw new Error('Cannot roll - all dice are kept! Use dicely.dice.plan to change at least one die to "roll".');
+            }
+
+            // Generate the new values first
+            const newValues = indicesToRoll.map(() => Math.floor(Math.random() * 6) + 1);
+
+            // Perform the roll with animation, passing the pre-generated values
+            await performRoll(indicesToRoll, 'AI', newValues);
+
+            return getCurrentDiceState();
+        }
+
+        // Handle reset tool call
+        function handleReset() {
+            diceValues = [null, null, null, null, null];
+            keptDice = [false, false, false, false, false];
+            updateDiceDisplay();
+            updateGameInfo();
+            return getCurrentDiceState();
+        }
+
+        // Display agent connection configuration
+        function displayAgentInstructions(connectionData) {
+            const configDiv = document.getElementById('agent-config');
+            const configCode = document.getElementById('config-code');
+            const cliCommand = document.getElementById('cli-command');
+            const mcpUrlInput = document.getElementById('mcp-url');
+            const apiKeyInput = document.getElementById('api-key');
+
+            // Set direct connection values
+            mcpUrlInput.value = connectionData.mcpEndpoint;
+            apiKeyInput.value = connectionData.userApiKey;
+
+            // Build MCP configuration from the event data
+            const mcpConfig = {
+                "dicely": {
+                    type: 'http',
+                    url: connectionData.mcpEndpoint,
+                    headers: { Authorization: `Bearer ${connectionData.userApiKey}` }
+                }
+            };
+
+            // Format JSON with proper indentation
+            configCode.textContent = JSON.stringify(mcpConfig, null, 2);
+
+            // Generate CLI command
+            const cliCmd = `claude mcp add --transport http dicely ${connectionData.mcpEndpoint} \\
+  --header "Authorization: Bearer ${connectionData.userApiKey}"`;
+            cliCommand.textContent = cliCmd;
+
+            // Show the configuration
+            configDiv.style.display = 'block';
+        }
+
+        // Generic copy to clipboard function
+        function copyToClipboard(elementId, evt) {
+            const element = document.getElementById(elementId);
+            const text = element.value || element.textContent;
+            const button = evt.currentTarget;
+            const originalBg = button.style.background;
+            const originalColor = button.style.color;
+
+            navigator.clipboard.writeText(text).then(() => {
+                button.style.background = '#4caf50';
+                button.style.color = 'white';
+                button.style.borderColor = '#4caf50';
+
+                setTimeout(() => {
+                    button.style.background = originalBg;
+                    button.style.color = originalColor;
+                    button.style.borderColor = '#ddd';
+                }, 500);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Copy configuration to clipboard
+        function copyConfig(evt) {
+            const configElement = document.getElementById('config-code');
+            const text = configElement.textContent;
+            const button = evt.target;
+
+            navigator.clipboard.writeText(text).then(() => {
+                // Show feedback
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#4caf50';
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#2196f3';
+                }, 500);
+            }).catch(err => {
+                console.error('Failed to copy to clipboard:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Copy CLI command to clipboard  
+        function copyCLICommand(evt) {
+            const cliElement = document.getElementById('cli-command');
+            const text = cliElement.textContent;
+            const button = evt.target;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#4caf50';
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#2196f3';
+                }, 500);
+            }).catch(err => {
+                console.error('Failed to copy to clipboard:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // UI helper function
+        function updateStatus(newStatus) {
+            status.className = `status ${newStatus}`;
+
+            // Update visual connection status
+            const agentLine = document.getElementById('agent-snappjack-line');
+            const snappjackLine = document.getElementById('snappjack-dicely-line');
+            const statusText = document.getElementById('connection-status-text');
+
+            const snappjackCircle = document.getElementById('snappjack-circle');
+
+            switch (newStatus) {
+                case 'disconnected':
+                    agentLine.style.background = '#ccc';  // gray (unknown)
+                    snappjackLine.style.background = '#f44336';  // red
+                    snappjackCircle.className = '';  // remove animation
+                    statusText.textContent = 'Snappjack disconnected - Connect the app first';
+                    break;
+                case 'connected':
+                    agentLine.style.background = '#f44336';  // red
+                    snappjackLine.style.background = '#4caf50';  // green
+                    snappjackCircle.className = '';  // remove animation
+                    statusText.textContent = 'App connected to Snappjack - Ready for AI Agent';
+                    break;
+                case 'bridged':
+                    agentLine.style.background = '#4caf50';  // green
+                    snappjackLine.style.background = '#4caf50';  // green
+                    snappjackCircle.className = 'snappjack-active';  // add animation
+                    statusText.textContent = 'AI Agent connected - All systems operational';
+                    break;
+                default:
+                    statusText.textContent = 'Status: ' + newStatus;
+            }
+
+            // Set custom status messages for hidden text status
+            let statusMessage;
+            switch (newStatus) {
+                case 'disconnected':
+                    statusMessage = 'Snappjack Status: Disconnected';
+                    break;
+                case 'connected':
+                    statusMessage = 'Snappjack Status: Connected, ready for AI Agent';
+                    break;
+                case 'bridged':
+                    statusMessage = 'Snappjack Status: AI Agent connected';
+                    break;
+                default:
+                    statusMessage = 'Snappjack Status: ' + newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            }
+
+            status.textContent = statusMessage;
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            initializeGame();
+
+            // Wait a bit for the Snappjack script to load
+            setTimeout(initializeSnappjack, 100);
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (snappjack) {
+                snappjack.disconnect();
+            }
+        });
+    </script>
+</body>
+
+</html>
