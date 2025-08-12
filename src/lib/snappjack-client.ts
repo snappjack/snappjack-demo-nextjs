@@ -51,7 +51,7 @@ export type Tool = {
   handler?: ToolHandler;
 };
 
-export type ToolHandler = (args: unknown, message?: ToolCallMessage) => Promise<ToolResponse>;
+export type ToolHandler = (args: any, message?: ToolCallMessage) => Promise<ToolResponse>;
 
 interface CallToolResult {
   _meta?: { [key: string]: unknown };

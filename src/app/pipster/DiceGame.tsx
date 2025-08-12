@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import DiceContainer from './DiceContainer';
 import GameControls from './GameControls';
 import GameStatus from './GameStatus';
-import ConnectionStatus from '../snappjack/ConnectionStatus';
-import AgentConfig from '../snappjack/AgentConfig';
-import AvailableTools from '../snappjack/AvailableTools';
+import ConnectionStatus from '@/components/ConnectionStatus';
+import AgentConfig from '@/components/AgentConfig';
+import AvailableTools from '@/components/AvailableTools';
 import { GameState, DiceState } from '@/types/dice';
-import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse } from '@/lib/snappjack-client';
+import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@/lib/snappjack-client';
 
 export default function DiceGame() {
   const [gameState, setGameState] = useState<GameState>({
@@ -20,7 +20,6 @@ export default function DiceGame() {
   const [rollingIndices, setRollingIndices] = useState<number[]>([]);
   const [snappjackStatus, setSnappjackStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
-  const [snappjackInstance, setSnappjackInstance] = useState<Snappjack | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
 
   // Create ref to hold current game state to avoid stale closures in tool handlers
@@ -70,7 +69,7 @@ export default function DiceGame() {
   };
 
   // Perform dice roll - returns complete new dice state
-  const performRoll = async (): Promise<(number | null)[]> => {
+  const performRoll = useCallback(async (): Promise<(number | null)[]> => {
     const currentState = gameStateRef.current;
     const indicesToRoll = currentState.keptDice
       .map((kept, index) => kept ? null : index)
@@ -103,22 +102,23 @@ export default function DiceGame() {
         resolve(finalDiceValues);
       }, 500);
     });
-  };
+  }, []);
 
   // Roll dice (user action)
   const handleUserDiceRoll = async () => {
     if (gameState.isRolling) return;
     try {
       await performRoll();
-    } catch (error) {
+    } catch {
       // All dice are kept, nothing to roll
       return;
     }
   };
 
   // Reset game (user action)
-  const handleUserDiceReset = (): GameState => {
-    if (gameState.isRolling) {
+  const handleUserDiceReset = useCallback((): GameState => {
+    const currentState = gameStateRef.current;
+    if (currentState.isRolling) {
       throw new Error('Cannot reset - dice are still rolling!');
     }
     const newState: GameState = {
@@ -128,10 +128,10 @@ export default function DiceGame() {
     };
     setGameState(newState);
     return newState;
-  };
+  }, []);
 
   // Agent tool handlers
-  const handleAgentSystemInfoGet = async (): Promise<ToolResponse> => {
+  const handleAgentSystemInfoGet: ToolHandler = useCallback(async (): Promise<ToolResponse> => {
     const currentState = getCurrentDiceState();
     
     const systemDoc = `PIPSTER DICE SYSTEM
@@ -167,9 +167,10 @@ Important Rules:
         text: message
       }]
     };
-  };
+  }, [getCurrentDiceState]);
 
-  const handleAgentDicePlan = async (actions: string[]): Promise<ToolResponse> => {
+  const handleAgentDicePlan: ToolHandler = useCallback(async (args: {actions: string[]}): Promise<ToolResponse> => {
+    const {actions} = args;
     if (!Array.isArray(actions)) {
       throw new Error('the input actions parameter must be an array');
     }
@@ -204,9 +205,9 @@ Important Rules:
         text: JSON.stringify(newStateForTool)
       }]
     };
-  };
+  }, []);
 
-  const handleAgentDiceRoll = async (): Promise<ToolResponse> => {
+  const handleAgentDiceRoll: ToolHandler = useCallback(async (): Promise<ToolResponse> => {
     const currentState = gameStateRef.current;
     
     // performRoll now returns the complete new dice state
@@ -223,9 +224,9 @@ Important Rules:
         text: JSON.stringify(newStateForTool)
       }]
     };
-  };
+  }, [performRoll]);
 
-  const handleAgentDiceReset = async (): Promise<ToolResponse> => {
+  const handleAgentDiceReset: ToolHandler = useCallback(async (): Promise<ToolResponse> => {
     const newState = handleUserDiceReset();
     
     // The resulting state is known, so we can construct it directly.
@@ -240,8 +241,8 @@ Important Rules:
         text: JSON.stringify(newStateForTool)
       }]
     };
-  };
-
+  }, [handleUserDiceReset]);
+  
   // Initialize Snappjack
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -273,7 +274,7 @@ Important Rules:
           },
           required: ['actions']
         },
-        handler: async (args: { actions: string[] }) => handleAgentDicePlan(args.actions)
+        handler: handleAgentDicePlan
       },
       {
         name: 'pipster.dice.reset',
@@ -336,13 +337,16 @@ Important Rules:
       console.error('Connection failed:', error);
     });
 
-    setSnappjackInstance(snappjack);
-
     // Cleanup on unmount
     return () => {
       snappjack.disconnect();
     };
-  }, []); // Empty dependency array for initial setup only
+  }, [
+    handleAgentSystemInfoGet,
+    handleAgentDicePlan,
+    handleAgentDiceReset,
+    handleAgentDiceRoll
+  ]); // Add the memoized handlers to the dependency array
 
   const isRollDisabled = gameState.keptDice.filter(kept => kept).length === 5;
 

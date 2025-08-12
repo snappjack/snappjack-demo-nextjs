@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import DiceGame from '@/components/dice/DiceGame';
+import DiceGame from './DiceGame';
 
 export const metadata: Metadata = {
   title: 'Pipster - Agentic Dice',

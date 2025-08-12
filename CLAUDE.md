@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SnappjackPipster is a Next.js application demonstrating AI agent integration through the Snappjack SDK. It provides a dice game interface where users can interact directly via GUI, while AI agents can connect to live sessions through the Model Context Protocol (MCP).
+SnappjackDemos is a Next.js project which is a collection of demos showing how to use the Snappjack SDK. It currently has a single demo which provides a dice game interface where users can interact directly via GUI, while AI agents can connect to live sessions through the Model Context Protocol (MCP).
 
 ## Development Commands
 
