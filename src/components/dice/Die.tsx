@@ -1,0 +1,35 @@
+'use client';
+
+import { DieProps } from '@/types/dice';
+
+export default function Die({ value, isKept, isRolling, index, onClick }: DieProps) {
+  const handleClick = () => {
+    if (value !== null && !isRolling) {
+      onClick(index);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div
+        onClick={handleClick}
+        className={`
+          w-20 h-20 border-[3px] rounded-lg 
+          flex items-center justify-center
+          text-4xl font-bold bg-white
+          cursor-pointer transition-all duration-300
+          select-none
+          ${isRolling ? 'animate-dice-roll' : ''}
+          ${isKept ? 'bg-green-50 border-green-500' : 'border-gray-300 hover:border-blue-500 hover:scale-105'}
+        `}
+      >
+        {value === null ? '-' : value}
+      </div>
+      {isKept && (
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">
+          ✓
+        </div>
+      )}
+    </div>
+  );
+}
