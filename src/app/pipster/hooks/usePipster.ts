@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { GameState, DiceState } from '@/types/dice';
 
-export const useDiceGame = () => {
+export const usePipster = () => {
   const [gameState, setGameState] = useState<GameState>({
     diceValues: [null, null, null, null, null],
     keptDice: [false, false, false, false, false],

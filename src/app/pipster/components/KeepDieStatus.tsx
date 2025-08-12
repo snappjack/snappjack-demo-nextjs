@@ -2,7 +2,7 @@
 
 import { GameStatusProps } from '@/types/dice';
 
-export default function GameStatus({ diceValues, keptDice }: GameStatusProps) {
+export default function KeepDieStatus({ diceValues, keptDice }: GameStatusProps) {
   const keptCount = keptDice.filter(kept => kept).length;
   const rollingCount = 5 - keptCount;
   const allNull = diceValues.every(v => v === null);

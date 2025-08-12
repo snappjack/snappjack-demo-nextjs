@@ -17,7 +17,7 @@ export interface DieProps {
   onClick: (index: number) => void;
 }
 
-export interface GameControlsProps {
+export interface RollerButtonsProps {
   onRoll: () => void;
   onReset: () => void;
   onKeepAll: () => void;

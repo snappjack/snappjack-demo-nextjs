@@ -51,7 +51,7 @@ export type Tool = {
   handler?: ToolHandler;
 };
 
-export type ToolHandler = (args: any, message?: ToolCallMessage) => Promise<ToolResponse>;
+export type ToolHandler = (args: unknown, message?: ToolCallMessage) => Promise<ToolResponse>;
 
 interface CallToolResult {
   _meta?: { [key: string]: unknown };
@@ -317,7 +317,7 @@ export class Snappjack extends EventTarget {
         this.ws.onclose = (event) => {
           this.logger.log(`❌ Snappjack: WebSocket closed - Code: ${event.code}, Reason: ${event.reason}`);
           clearTimeout(connectTimeout);
-          this.handleClose(event.code, event.reason);
+          this.handleClose(event.code);
         };
 
         this.ws.onerror = (event) => {
@@ -452,7 +452,7 @@ export class Snappjack extends EventTarget {
     }
   }
 
-  private handleClose(code: number, _reason: string): void {
+  private handleClose(code: number): void {
     this.ws = null;
     this.currentAgentSessionId = null;
     this.updateStatus('disconnected');
@@ -597,6 +597,7 @@ export class Snappjack extends EventTarget {
   public getTools(): ToolDefinition[] {
     // Return tool definitions without handlers for registration
     return Array.from(this.tools.values()).map(tool => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { handler, ...toolDef } = tool;
       return toolDef;
     });

@@ -1,15 +1,15 @@
 'use client';
 
-import { GameControlsProps } from '@/types/dice';
+import { RollerButtonsProps } from '@/types/dice';
 
-export default function GameControls({
+export default function RollerButtons({
   onRoll,
   onReset,
   onKeepAll,
   onClearKeep,
   isRollDisabled,
   isRolling
-}: GameControlsProps) {
+}: RollerButtonsProps) {
   return (
     <div className="flex justify-center gap-4 my-8 flex-wrap">
       <button

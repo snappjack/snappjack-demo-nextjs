@@ -65,8 +65,9 @@ Important Rules:
     };
   }, [getCurrentDiceState]);
 
-  const handleAgentDicePlan: ToolHandler = useCallback(async (args: {actions: string[]}): Promise<ToolResponse> => {
-    const newStateForTool = setDicePlan(args.actions);
+  const handleAgentDicePlan: ToolHandler = useCallback(async (args: unknown): Promise<ToolResponse> => {
+    const { actions } = args as { actions: string[] };
+    const newStateForTool = setDicePlan(actions);
     return {
       content: [{
         type: 'text',

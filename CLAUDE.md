@@ -22,7 +22,7 @@ The app follows Next.js App Router structure with two main interface layers:
 **Human Interface** (`/src/components/dice/`):
 - `DiceGame.tsx` - Main game component managing state and Snappjack integration
 - `DiceContainer.tsx` - Visual dice display
-- `GameControls.tsx` - Roll, reset, keep/clear controls
+- `RollerButtons.tsx` - Roll, reset, keep/clear controls
 - `GameStatus.tsx` - Current game state display
 - `Die.tsx` - Individual die component
 
