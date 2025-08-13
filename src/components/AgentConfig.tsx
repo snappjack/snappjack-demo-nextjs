@@ -46,7 +46,7 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
             <input
               type="text"
               readOnly
-              value={connectionData.mcpEndpoint}
+              value={connectionData?.mcpEndpoint || ''}
               className="flex-1 p-2 border border-gray-300 rounded text-sm font-mono bg-gray-50"
             />
             <button
@@ -64,7 +64,7 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
             <input
               type="text"
               readOnly
-              value={connectionData.userApiKey}
+              value={connectionData?.userApiKey || ''}
               className="flex-1 p-2 border border-gray-300 rounded text-sm font-mono bg-gray-50"
             />
             <button
