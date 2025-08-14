@@ -76,7 +76,7 @@ export default function DicePage() {
           </div>
 
           {/* Connection Status */}
-          <ConnectionStatus status={status} />
+          <ConnectionStatus status={status} appName="Pipster" appEmoji="🎲" />
 
           {/* Available Tools - only show when agent is connected (bridged) */}
           {status === 'bridged' && <AvailableTools tools={availableTools} />}

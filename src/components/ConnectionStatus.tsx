@@ -2,7 +2,7 @@
 
 import { ConnectionStatusProps } from '@/types/dice';
 
-export default function ConnectionStatus({ status }: ConnectionStatusProps) {
+export default function ConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲' }: ConnectionStatusProps) {
   const getLineColor = (line: 'agent' | 'app') => {
     if (line === 'agent') {
       return status === 'bridged' ? 'bg-green-500' : status === 'connected' ? 'bg-red-500' : 'bg-gray-300';
@@ -47,17 +47,17 @@ export default function ConnectionStatus({ status }: ConnectionStatusProps) {
           <div className="text-sm font-medium text-gray-600">Snappjack</div>
         </div>
 
-        {/* Snappjack to Pipster line */}
+        {/* Snappjack to App line */}
         <div className="flex-1 max-w-[150px] flex items-center mx-2 -mt-6">
           <div className={`w-full h-1 rounded ${getLineColor('app')}`}></div>
         </div>
 
-        {/* Pipster */}
+        {/* App */}
         <div className="text-center p-2">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-2 border-2 border-gray-300">
-            <span className="text-3xl">🎲</span>
+            <span className="text-3xl">{appEmoji}</span>
           </div>
-          <div className="text-sm font-medium text-gray-600">Pipster</div>
+          <div className="text-sm font-medium text-gray-600">{appName}</div>
         </div>
       </div>
     </div>

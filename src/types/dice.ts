@@ -33,6 +33,8 @@ export interface GameStatusProps {
 
 export interface ConnectionStatusProps {
   status: 'disconnected' | 'connected' | 'bridged';
+  appName?: string;
+  appEmoji?: string;
 }
 
 export interface AgentConfigProps {
