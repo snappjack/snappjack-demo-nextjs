@@ -1,11 +1,11 @@
 {
-  "name": "snappjack-pipster",
-  "version": "0.1.0",
+  "name": "@snappjack/demo-nextjs",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --port 3010",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3010",
     "lint": "next lint"
   },
   "dependencies": {

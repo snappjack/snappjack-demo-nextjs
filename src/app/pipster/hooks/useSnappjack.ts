@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@/lib/snappjack-client';
-// import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
+import { useState, useEffect, useCallback, useRef } from 'react';
+// import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@/lib/snappjack-client';
+import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
 import { GameState, DiceState } from '@/types/dice';
 
 const appId = process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID;
@@ -29,7 +29,21 @@ export const useSnappjack = ({
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
 
-  const handleAgentSystemInfoGet: ToolHandler = useCallback(async (): Promise<ToolResponse> => {
+  // Use refs to maintain stable references to handlers while allowing access to latest props
+  const handlersRef = useRef<{
+    handleAgentSystemInfoGet: ToolHandler;
+    handleAgentDicePlan: ToolHandler;
+    handleAgentDiceRoll: ToolHandler;
+    handleAgentDiceReset: ToolHandler;
+  }>({
+    handleAgentSystemInfoGet: async () => ({ content: [] }),
+    handleAgentDicePlan: async () => ({ content: [] }),
+    handleAgentDiceRoll: async () => ({ content: [] }),
+    handleAgentDiceReset: async () => ({ content: [] }),
+  });
+
+  // Update handlers in ref to use latest props
+  handlersRef.current.handleAgentSystemInfoGet = useCallback(async (): Promise<ToolResponse> => {
     const currentState = getCurrentDiceState();
     
     const systemDoc = `PIPSTER DICE SYSTEM
@@ -67,7 +81,7 @@ Important Rules:
     };
   }, [getCurrentDiceState]);
 
-  const handleAgentDicePlan: ToolHandler = useCallback(async (args: unknown): Promise<ToolResponse> => {
+  handlersRef.current.handleAgentDicePlan = useCallback(async (args: unknown): Promise<ToolResponse> => {
     const { actions } = args as { actions: string[] };
     const newStateForTool = setDicePlan(actions);
     return {
@@ -78,7 +92,7 @@ Important Rules:
     };
   }, [setDicePlan]);
 
-  const handleAgentDiceRoll: ToolHandler = useCallback(async (): Promise<ToolResponse> => {
+  handlersRef.current.handleAgentDiceRoll = useCallback(async (): Promise<ToolResponse> => {
     const newDiceValues = await performRoll();
     const currentState = getCurrentDiceState();
     
@@ -95,7 +109,7 @@ Important Rules:
     };
   }, [performRoll, getCurrentDiceState]);
 
-  const handleAgentDiceReset: ToolHandler = useCallback(async (): Promise<ToolResponse> => {
+  handlersRef.current.handleAgentDiceReset = useCallback(async (): Promise<ToolResponse> => {
     const newState = resetGame();
     
     const newStateForTool: DiceState = {
@@ -123,7 +137,7 @@ Important Rules:
           properties: {},
           required: []
         },
-        handler: handleAgentSystemInfoGet
+        handler: (args, msg) => handlersRef.current.handleAgentSystemInfoGet(args, msg)
       },
       {
         name: 'pipster.dice.plan',
@@ -141,7 +155,7 @@ Important Rules:
           },
           required: ['actions']
         },
-        handler: handleAgentDicePlan
+        handler: (args, msg) => handlersRef.current.handleAgentDicePlan(args, msg)
       },
       {
         name: 'pipster.dice.reset',
@@ -151,7 +165,7 @@ Important Rules:
           properties: {},
           required: []
         },
-        handler: handleAgentDiceReset
+        handler: (args, msg) => handlersRef.current.handleAgentDiceReset(args, msg)
       },
       {
         name: 'pipster.dice.roll',
@@ -161,7 +175,7 @@ Important Rules:
           properties: {},
           required: []
         },
-        handler: handleAgentDiceRoll
+        handler: (args, msg) => handlersRef.current.handleAgentDiceRoll(args, msg)
       }
     ];
 
@@ -176,15 +190,11 @@ Important Rules:
 
     setAvailableTools(tools);
 
-    snappjack.on('status', (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const newStatus = customEvent.detail as SnappjackStatus;
+    snappjack.on('status', (newStatus: SnappjackStatus) => {
       setStatus(newStatus);
     });
 
-    snappjack.on('user-api-key-generated', (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const data = customEvent.detail as ConnectionData;
+    snappjack.on('user-api-key-generated', (data: ConnectionData) => {
       setConnectionData(data);
       console.log('Pipster demo app connected via Snappjack!');
     });
@@ -194,14 +204,10 @@ Important Rules:
     });
 
     return () => {
+      snappjack.removeAllListeners();
       snappjack.disconnect();
     };
-  }, [
-    handleAgentSystemInfoGet,
-    handleAgentDicePlan,
-    handleAgentDiceReset,
-    handleAgentDiceRoll
-  ]);
+  }, []); // Empty dependency array - only run once on mount
 
   return {
     status,
