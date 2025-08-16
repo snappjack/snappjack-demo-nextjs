@@ -9,6 +9,7 @@ export interface BoundingBox {
 
 export interface BaseCanvasObject {
   id: string;
+  name: string;
   type: 'rectangle' | 'circle' | 'text' | 'polygon';
   x: number; // center x position as percentage (0-100)
   y: number; // center y position as percentage (0-100)
@@ -50,10 +51,26 @@ export interface PolygonObject extends BaseCanvasObject {
 
 export type CanvasObject = RectangleObject | CircleObject | TextObject | PolygonObject;
 
+export type CreationMode = 'none' | 'rectangle' | 'circle' | 'text' | 'polygon';
+
+export type HandleType = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'rotate';
+
+export interface HandleInteraction {
+  type: HandleType;
+  startX: number;
+  startY: number;
+  startObject: CanvasObject;
+}
+
 export interface DrawingState {
   objects: CanvasObject[];
   selectedObject: CanvasObject | null;
   isDragging: boolean;
+  creationMode: CreationMode;
+  isCreating: boolean;
+  creationStart: { x: number; y: number } | null;
+  polygonVertices: Array<{ x: number; y: number }>;
+  handleInteraction: HandleInteraction | null;
 }
 
 export interface CanvasStatus {

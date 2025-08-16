@@ -1,16 +1,29 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
-import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/types/drawit';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject, CreationMode, HandleInteraction } from '@/types/drawit';
 
 interface CanvasProps {
   objects: CanvasObject[];
   selectedObject: CanvasObject | null;
   width: number;
   height: number;
+  creationMode: CreationMode;
+  isCreating: boolean;
+  creationStart: { x: number; y: number } | null;
+  polygonVertices: Array<{ x: number; y: number }>;
+  handleInteraction: HandleInteraction | null;
   onCanvasClick: () => void;
   onObjectClick: (id: string) => void;
   onObjectDrag: (id: string, x: number, y: number) => void;
+  onStartCreation: (x: number, y: number) => void;
+  onFinishCreation: (x: number, y: number, text?: string) => void;
+  onUpdateCreation: () => void;
+  onAddPolygonVertex: (x: number, y: number) => void;
+  onResizeObject: (id: string, handleType: string, x: number, y: number) => void;
+  onRotateObject: (id: string, x: number, y: number) => void;
+  onStartHandleInteraction: (handleType: string, x: number, y: number, object: CanvasObject) => void;
+  onEndHandleInteraction: () => void;
 }
 
 export default function Canvas({
@@ -18,13 +31,30 @@ export default function Canvas({
   selectedObject,
   width,
   height,
+  creationMode,
+  isCreating,
+  creationStart,
+  polygonVertices,
+  handleInteraction,
   onCanvasClick,
   onObjectClick,
-  onObjectDrag
+  onObjectDrag,
+  onStartCreation,
+  onFinishCreation,
+  onUpdateCreation,
+  onAddPolygonVertex,
+  onResizeObject,
+  onRotateObject,
+  onStartHandleInteraction,
+  onEndHandleInteraction
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDraggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const [currentMousePos, setCurrentMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [textInputPos, setTextInputPos] = useState<{ x: number; y: number } | null>(null);
+  const [textInputValue, setTextInputValue] = useState('');
 
   const percentToPixelX = useCallback((percent: number): number => (percent / 100) * width, [width]);
   const percentToPixelY = useCallback((percent: number): number => (percent / 100) * height, [height]);
@@ -41,6 +71,81 @@ export default function Canvas({
     }
     return null;
   }, [objects]);
+
+  const getHandleAtPoint = useCallback((x: number, y: number, obj: CanvasObject): string | null => {
+    const bbox = obj.boundingBox;
+    const handleSize = 8;
+    
+    // Convert to pixel coordinates
+    const pixelX = percentToPixelX(x);
+    const pixelY = percentToPixelY(y);
+    
+    // Calculate object center and dimensions in pixels
+    const left = percentToPixelX(bbox.minX);
+    const right = percentToPixelX(bbox.maxX);
+    const top = percentToPixelY(bbox.minY);
+    const bottom = percentToPixelY(bbox.maxY);
+    const centerX = (left + right) / 2;
+    const centerY = (top + bottom) / 2;
+    
+    // Convert rotation to radians
+    const rotation = (obj.rotation || 0) * Math.PI / 180;
+    
+    // Function to rotate a point around the center
+    const rotatePoint = (px: number, py: number) => {
+      const cos = Math.cos(-rotation); // Negative for inverse rotation
+      const sin = Math.sin(-rotation);
+      const dx = px - centerX;
+      const dy = py - centerY;
+      return {
+        x: centerX + dx * cos - dy * sin,
+        y: centerY + dx * sin + dy * cos
+      };
+    };
+    
+    // Transform mouse position to object's local coordinate system
+    const localMouse = rotatePoint(pixelX, pixelY);
+    
+    // Check rotation handle (above the object, also rotated)
+    // The rotation handle is at the top center, 20 pixels above
+    const rotationHandleLocal = { x: centerX, y: top - 20 };
+    
+    // Rotate the handle position to match the object's rotation
+    const cos = Math.cos(rotation);
+    const sin = Math.sin(rotation);
+    const dx = rotationHandleLocal.x - centerX;
+    const dy = rotationHandleLocal.y - centerY;
+    const rotationHandle = {
+      x: centerX + dx * cos - dy * sin,
+      y: centerY + dx * sin + dy * cos
+    };
+    
+    // Check if mouse is near rotation handle in world space
+    if (Math.abs(pixelX - rotationHandle.x) < handleSize && Math.abs(pixelY - rotationHandle.y) < handleSize) {
+      return 'rotate';
+    }
+    
+    // Check resize handles using the transformed mouse position
+    const handles = [
+      { type: 'nw', x: left, y: top },
+      { type: 'n', x: centerX, y: top },
+      { type: 'ne', x: right, y: top },
+      { type: 'e', x: right, y: centerY },
+      { type: 'se', x: right, y: bottom },
+      { type: 's', x: centerX, y: bottom },
+      { type: 'sw', x: left, y: bottom },
+      { type: 'w', x: left, y: centerY },
+    ];
+    
+    // Check handles in local space (unrotated)
+    for (const handle of handles) {
+      if (Math.abs(localMouse.x - handle.x) < handleSize && Math.abs(localMouse.y - handle.y) < handleSize) {
+        return handle.type;
+      }
+    }
+    
+    return null;
+  }, [percentToPixelX, percentToPixelY]);
 
   const drawRectangle = useCallback((ctx: CanvasRenderingContext2D, rect: RectangleObject) => {
     const centerX = percentToPixelX(rect.x);
@@ -137,6 +242,167 @@ export default function Canvas({
     ctx.stroke();
   }, [percentToPixelX, percentToPixelY]);
 
+  const drawCreationPreview = useCallback((ctx: CanvasRenderingContext2D) => {
+    if (!isCreating || !creationStart || !currentMousePos) return;
+
+    ctx.save();
+    ctx.strokeStyle = '#0080ff';
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2;
+
+    const startX = percentToPixelX(creationStart.x);
+    const startY = percentToPixelY(creationStart.y);
+    const endX = percentToPixelX(currentMousePos.x);
+    const endY = percentToPixelY(currentMousePos.y);
+
+    switch (creationMode) {
+      case 'rectangle': {
+        const rectWidth = Math.abs(endX - startX);
+        const rectHeight = Math.abs(endY - startY);
+        const rectX = Math.min(startX, endX);
+        const rectY = Math.min(startY, endY);
+        ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+        break;
+      }
+      case 'circle': {
+        const distanceInPercent = Math.sqrt(Math.pow(currentMousePos.x - creationStart.x, 2) + Math.pow(currentMousePos.y - creationStart.y, 2));
+        // Convert percentage distance to pixel radius for preview
+        const minDimension = Math.min(width, height);
+        const pixelRadius = (distanceInPercent / 100) * minDimension;
+        ctx.beginPath();
+        ctx.arc(startX, startY, pixelRadius, 0, 2 * Math.PI);
+        ctx.stroke();
+        break;
+      }
+    }
+
+    ctx.restore();
+  }, [isCreating, creationStart, currentMousePos, creationMode, percentToPixelX, percentToPixelY, width, height]);
+
+  const drawPolygonPreview = useCallback((ctx: CanvasRenderingContext2D) => {
+    if (creationMode !== 'polygon' || polygonVertices.length === 0) return;
+
+    ctx.save();
+    ctx.strokeStyle = '#0080ff';
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(0, 128, 255, 0.1)';
+
+    // Draw current polygon
+    ctx.beginPath();
+    const firstVertex = polygonVertices[0];
+    ctx.moveTo(percentToPixelX(firstVertex.x), percentToPixelY(firstVertex.y));
+
+    for (let i = 1; i < polygonVertices.length; i++) {
+      const vertex = polygonVertices[i];
+      ctx.lineTo(percentToPixelX(vertex.x), percentToPixelY(vertex.y));
+    }
+
+    if (polygonVertices.length >= 3) {
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.stroke();
+
+    // Draw vertices
+    polygonVertices.forEach(vertex => {
+      ctx.beginPath();
+      ctx.arc(percentToPixelX(vertex.x), percentToPixelY(vertex.y), 4, 0, 2 * Math.PI);
+      ctx.fillStyle = '#0080ff';
+      ctx.fill();
+    });
+
+    // Draw preview polygon with mouse position (if mouse is over canvas)
+    if (currentMousePos && polygonVertices.length >= 2) {
+      ctx.save();
+      ctx.strokeStyle = '#80c0ff';
+      ctx.setLineDash([2, 2]);
+      ctx.lineWidth = 1;
+      ctx.fillStyle = 'rgba(128, 192, 255, 0.05)';
+
+      ctx.beginPath();
+      const firstVertex = polygonVertices[0];
+      ctx.moveTo(percentToPixelX(firstVertex.x), percentToPixelY(firstVertex.y));
+
+      for (let i = 1; i < polygonVertices.length; i++) {
+        const vertex = polygonVertices[i];
+        ctx.lineTo(percentToPixelX(vertex.x), percentToPixelY(vertex.y));
+      }
+
+      // Add preview vertex at mouse position
+      ctx.lineTo(percentToPixelX(currentMousePos.x), percentToPixelY(currentMousePos.y));
+
+      if (polygonVertices.length >= 2) {
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.stroke();
+
+      // Draw preview vertex at mouse position
+      ctx.beginPath();
+      ctx.arc(percentToPixelX(currentMousePos.x), percentToPixelY(currentMousePos.y), 3, 0, 2 * Math.PI);
+      ctx.fillStyle = '#80c0ff';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }, [creationMode, polygonVertices, currentMousePos, percentToPixelX, percentToPixelY]);
+
+  const drawSelectionHandles = useCallback((ctx: CanvasRenderingContext2D, obj: CanvasObject) => {
+    const bbox = obj.boundingBox;
+    const x = percentToPixelX(bbox.minX);
+    const y = percentToPixelY(bbox.minY);
+    const w = percentToPixelX(bbox.maxX) - x;
+    const h = percentToPixelY(bbox.maxY) - y;
+
+    ctx.save();
+    
+    // Draw selection outline
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+
+    // Draw corner handles
+    ctx.fillStyle = '#00aaff';
+    const handleSize = 8;
+    const handles = [
+      [x - handleSize/2, y - handleSize/2], // top-left
+      [x + w - handleSize/2, y - handleSize/2], // top-right
+      [x + w - handleSize/2, y + h - handleSize/2], // bottom-right
+      [x - handleSize/2, y + h - handleSize/2] // bottom-left
+    ];
+
+    handles.forEach(([hx, hy]) => {
+      ctx.fillRect(hx, hy, handleSize, handleSize);
+    });
+
+    // Draw rotation handle
+    const rotationHandleY = y - 20;
+    const centerX = x + w / 2;
+    ctx.beginPath();
+    ctx.arc(centerX, rotationHandleY, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fill();
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw line from object to rotation handle
+    ctx.beginPath();
+    ctx.moveTo(centerX, y);
+    ctx.lineTo(centerX, rotationHandleY);
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.stroke();
+
+    ctx.restore();
+  }, [percentToPixelX, percentToPixelY]);
+
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -173,17 +439,7 @@ export default function Canvas({
       }
 
       if (selectedObject && selectedObject.id === obj.id) {
-        const bbox = obj.boundingBox;
-        const x = percentToPixelX(bbox.minX);
-        const y = percentToPixelY(bbox.minY);
-        const bboxWidth = percentToPixelX(bbox.width);
-        const bboxHeight = percentToPixelY(bbox.height);
-
-        ctx.strokeStyle = '#00aaff';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
-        ctx.strokeRect(x, y, bboxWidth, bboxHeight);
-        ctx.setLineDash([]);
+        drawSelectionHandles(ctx, obj);
       }
 
       ctx.restore();
@@ -191,7 +447,13 @@ export default function Canvas({
 
     ctx.clearRect(0, 0, width, height);
     objects.forEach(obj => drawObjectLocal(ctx, obj));
-  }, [objects, selectedObject, width, height, percentToPixelX, percentToPixelY, drawRectangle, drawCircle, drawText, drawPolygon]);
+    
+    // Draw creation preview
+    drawCreationPreview(ctx);
+    
+    // Draw polygon preview
+    drawPolygonPreview(ctx);
+  }, [objects, selectedObject, width, height, percentToPixelX, percentToPixelY, drawRectangle, drawCircle, drawText, drawPolygon, drawSelectionHandles, drawCreationPreview, drawPolygonPreview]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -201,6 +463,37 @@ export default function Canvas({
     const x = pixelToPercentX(e.clientX - rect.left);
     const y = pixelToPercentY(e.clientY - rect.top);
 
+    // Handle creation modes
+    if (creationMode !== 'none') {
+      if (creationMode === 'text') {
+        // Show text input dialog
+        setTextInputPos({ x: e.clientX, y: e.clientY });
+        setShowTextInput(true);
+        setTextInputValue('');
+        // Store the position for when text is entered
+        onStartCreation(x, y);
+        return;
+      } else if (creationMode === 'polygon') {
+        // Add vertex to polygon
+        onAddPolygonVertex(x, y);
+        return;
+      } else {
+        // Start drag creation for rectangle/circle
+        onStartCreation(x, y);
+        return;
+      }
+    }
+
+    // Check for handle interaction first if object is selected
+    if (selectedObject) {
+      const handle = getHandleAtPoint(x, y, selectedObject);
+      if (handle) {
+        onStartHandleInteraction(handle, x, y, selectedObject);
+        return;
+      }
+    }
+
+    // Normal selection/dragging mode
     const clickedObject = getObjectAtPoint(x, y);
     if (clickedObject) {
       onObjectClick(clickedObject.id);
@@ -215,8 +508,6 @@ export default function Canvas({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDraggingRef.current || !selectedObject) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -224,26 +515,136 @@ export default function Canvas({
     const x = pixelToPercentX(e.clientX - rect.left);
     const y = pixelToPercentY(e.clientY - rect.top);
 
-    onObjectDrag(
-      selectedObject.id,
-      x - dragOffsetRef.current.x,
-      y - dragOffsetRef.current.y
-    );
+    // Update current mouse position for creation preview
+    setCurrentMousePos({ x, y });
+
+    // Handle handle interactions (resize/rotate)
+    if (handleInteraction && selectedObject) {
+      if (handleInteraction.type === 'rotate') {
+        onRotateObject(selectedObject.id, x, y);
+      } else {
+        onResizeObject(selectedObject.id, handleInteraction.type, x, y);
+      }
+      return;
+    }
+
+    // Handle creation mode updates
+    if (isCreating && (creationMode === 'rectangle' || creationMode === 'circle')) {
+      onUpdateCreation();
+      return;
+    }
+
+    // Handle object dragging
+    if (isDraggingRef.current && selectedObject) {
+      onObjectDrag(
+        selectedObject.id,
+        x - dragOffsetRef.current.x,
+        y - dragOffsetRef.current.y
+      );
+    }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // End handle interaction
+    if (handleInteraction) {
+      onEndHandleInteraction();
+      return;
+    }
+
+    if (isCreating && (creationMode === 'rectangle' || creationMode === 'circle')) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = pixelToPercentX(e.clientX - rect.left);
+      const y = pixelToPercentY(e.clientY - rect.top);
+      
+      onFinishCreation(x, y);
+    }
+    
     isDraggingRef.current = false;
   };
 
+  const getCursorStyle = () => {
+    switch (creationMode) {
+      case 'rectangle':
+      case 'circle':
+      case 'polygon':
+        return 'cursor-crosshair';
+      case 'text':
+        return 'cursor-text';
+      default:
+        return 'cursor-default';
+    }
+  };
+
+  const handleTextSubmit = () => {
+    if (textInputValue.trim() && creationStart) {
+      onFinishCreation(creationStart.x, creationStart.y, textInputValue.trim());
+    }
+    setShowTextInput(false);
+    setTextInputValue('');
+    setTextInputPos(null);
+  };
+
+  const handleTextCancel = () => {
+    setShowTextInput(false);
+    setTextInputValue('');
+    setTextInputPos(null);
+  };
+
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      className="border-2 border-gray-300 rounded-lg bg-white cursor-crosshair"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    />
+    <div className="relative">
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        className={`border-2 border-gray-300 rounded-lg bg-white ${getCursorStyle()}`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      />
+
+      {/* Text Input Modal */}
+      {showTextInput && textInputPos && (
+        <div 
+          className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg p-3"
+          style={{
+            left: textInputPos.x,
+            top: textInputPos.y,
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          <div className="text-sm font-medium text-gray-700 mb-2">Enter text:</div>
+          <input
+            type="text"
+            value={textInputValue}
+            onChange={(e) => setTextInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleTextSubmit();
+              if (e.key === 'Escape') handleTextCancel();
+            }}
+            className="w-48 px-2 py-1 text-sm border border-gray-300 rounded mb-2"
+            placeholder="Type your text..."
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleTextSubmit}
+              className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded"
+              disabled={!textInputValue.trim()}
+            >
+              Add Text
+            </button>
+            <button
+              onClick={handleTextCancel}
+              className="px-3 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

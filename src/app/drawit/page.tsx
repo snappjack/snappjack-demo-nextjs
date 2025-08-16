@@ -4,7 +4,8 @@ import { useDrawit } from './hooks/useDrawit';
 import { useSnappjack } from './hooks/useSnappjack';
 import Canvas from './components/Canvas';
 import ObjectList from './components/ObjectList';
-import ControlPanel from './components/ControlPanel';
+import CanvasToolbar from './components/CanvasToolbar';
+import PropertiesPanel from './components/PropertiesPanel';
 import ConnectionStatus from '@/components/ConnectionStatus';
 import AgentConfig from '@/components/AgentConfig';
 import AvailableTools from '@/components/AvailableTools';
@@ -24,6 +25,23 @@ export default function DrawItPage() {
     selectObject,
     moveObject,
     getCanvasStatus,
+    setCreationMode,
+    startCreation,
+    updateCreation,
+    finishCreation,
+    addPolygonVertex,
+    finishPolygon,
+    cancelCreation,
+    resizeObject,
+    rotateObject,
+    startHandleInteraction,
+    endHandleInteraction,
+    saveCanvas,
+    loadCanvas,
+    defaultStrokeColor,
+    defaultFillColor,
+    setDefaultStrokeColor,
+    setDefaultFillColor,
     CANVAS_WIDTH,
     CANVAS_HEIGHT
   } = useDrawit();
@@ -81,15 +99,42 @@ export default function DrawItPage() {
           <div className="lg:col-span-2">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Canvas</h2>
+              
+              {/* Canvas Toolbar */}
+              <CanvasToolbar
+                currentMode={drawingState.creationMode}
+                onModeChange={setCreationMode}
+                onFinishPolygon={finishPolygon}
+                onCancelCreation={cancelCreation}
+                polygonVertexCount={drawingState.polygonVertices.length}
+                strokeColor={defaultStrokeColor}
+                fillColor={defaultFillColor}
+                onStrokeColorChange={setDefaultStrokeColor}
+                onFillColorChange={setDefaultFillColor}
+              />
+              
               <div className="flex justify-center">
                 <Canvas
                   objects={drawingState.objects}
                   selectedObject={drawingState.selectedObject}
                   width={CANVAS_WIDTH}
                   height={CANVAS_HEIGHT}
+                  creationMode={drawingState.creationMode}
+                  isCreating={drawingState.isCreating}
+                  creationStart={drawingState.creationStart}
+                  polygonVertices={drawingState.polygonVertices}
+                  handleInteraction={drawingState.handleInteraction}
                   onCanvasClick={handleCanvasClick}
                   onObjectClick={handleObjectClick}
                   onObjectDrag={handleObjectDrag}
+                  onStartCreation={startCreation}
+                  onFinishCreation={finishCreation}
+                  onUpdateCreation={updateCreation}
+                  onAddPolygonVertex={addPolygonVertex}
+                  onResizeObject={resizeObject}
+                  onRotateObject={rotateObject}
+                  onStartHandleInteraction={startHandleInteraction}
+                  onEndHandleInteraction={endHandleInteraction}
                 />
               </div>
             </div>
@@ -97,12 +142,6 @@ export default function DrawItPage() {
 
           {/* Right Sidebar */}
           <div className="space-y-5">
-            {/* Control Panel */}
-            <ControlPanel
-              onClearCanvas={clearCanvas}
-              objectCount={drawingState.objects.length}
-            />
-
             {/* Object List */}
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Objects</h2>
@@ -112,8 +151,17 @@ export default function DrawItPage() {
                 onSelectObject={selectObject}
                 onDeleteObject={deleteObject}
                 onReorderObject={reorderObject}
+                onClearAll={clearCanvas}
+                onSave={saveCanvas}
+                onLoad={loadCanvas}
               />
             </div>
+
+            {/* Properties Panel */}
+            <PropertiesPanel
+              selectedObject={drawingState.selectedObject}
+              onUpdateObject={modifyObject}
+            />
           </div>
         </div>
 
