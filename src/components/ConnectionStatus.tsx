@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { ConnectionStatusProps } from '@/types/dice';
 
 export default function ConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲' }: ConnectionStatusProps) {
@@ -42,7 +43,13 @@ export default function ConnectionStatus({ status, appName = 'Pipster', appEmoji
                 <div className="w-full h-full bg-gradient-to-r from-purple-500 via-purple-700 to-purple-500"></div>
               </div>
             )}
-            <span className="text-sm font-bold text-white relative z-10">SJ</span>
+            <Image 
+              src="/images/logo-white-64.png" 
+              alt="Snappjack Logo" 
+              width={24}
+              height={24}
+              className="relative z-10"
+            />
           </div>
           <div className="text-sm font-medium text-gray-600">Snappjack</div>
         </div>
