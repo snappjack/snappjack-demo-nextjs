@@ -14,7 +14,6 @@ export default function DrawItPage() {
   const {
     drawingState,
     canvasRef,
-    getSystemInfo,
     addRectangle,
     addCircle,
     addText,
@@ -49,7 +48,6 @@ export default function DrawItPage() {
   } = useDrawit();
 
   const { status, connectionData, availableTools } = useSnappjack({
-    getSystemInfo,
     addRectangle,
     addCircle,
     addText,

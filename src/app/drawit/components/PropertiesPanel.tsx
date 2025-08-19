@@ -1,6 +1,7 @@
 'use client';
 
 import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/types/drawit';
+import { CONSTRAINTS } from '../hooks/useDrawit';
 
 interface PropertiesPanelProps {
   selectedObject: CanvasObject | null;
@@ -25,8 +26,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
           value={selectedObject.x.toFixed(1)}
           onChange={(e) => handleChange('x', parseFloat(e.target.value) || 0)}
           className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-          min="0"
-          max="100"
+          min={CONSTRAINTS.common.position.min}
+          max={CONSTRAINTS.common.position.max}
           step="0.1"
         />
       </div>
@@ -37,8 +38,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
           value={selectedObject.y.toFixed(1)}
           onChange={(e) => handleChange('y', parseFloat(e.target.value) || 0)}
           className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-          min="0"
-          max="100"
+          min={CONSTRAINTS.common.position.min}
+          max={CONSTRAINTS.common.position.max}
           step="0.1"
         />
       </div>
@@ -105,8 +106,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
                 value={obj.strokeWidth || 2}
                 onChange={(e) => handleChange('strokeWidth', parseInt(e.target.value))}
                 className="w-full"
-                min="1"
-                max="20"
+                min={CONSTRAINTS.common.strokeWidth.min}
+                max={CONSTRAINTS.common.strokeWidth.max}
               />
             </div>
           </>
@@ -127,8 +128,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
             value={selectedObject.rotation || 0}
             onChange={(e) => handleChange('rotation', parseInt(e.target.value))}
             className="w-full"
-            min="-360"
-            max="360"
+            min={CONSTRAINTS.common.rotation.min}
+            max={CONSTRAINTS.common.rotation.max}
           />
         </div>
       )}
@@ -150,8 +151,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
                   value={rect.width.toFixed(1)}
                   onChange={(e) => handleChange('width', parseFloat(e.target.value) || 1)}
                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                  min="1"
-                  max="100"
+                  min={CONSTRAINTS.rectangle.width.min}
+                  max={CONSTRAINTS.rectangle.width.max}
                   step="0.1"
                 />
               </div>
@@ -162,28 +163,26 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
                   value={rect.height.toFixed(1)}
                   onChange={(e) => handleChange('height', parseFloat(e.target.value) || 1)}
                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                  min="1"
-                  max="100"
+                  min={CONSTRAINTS.rectangle.width.min}
+                  max={CONSTRAINTS.rectangle.width.max}
                   step="0.1"
                 />
               </div>
             </div>
 
-            {rect.cornerRadius !== undefined && (
-              <div className="mb-3">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Corner Radius: {(rect.cornerRadius || 0).toFixed(0)}%
-                </label>
-                <input
-                  type="range"
-                  value={rect.cornerRadius || 0}
-                  onChange={(e) => handleChange('cornerRadius', parseInt(e.target.value))}
-                  className="w-full"
-                  min="0"
-                  max="50"
-                />
-              </div>
-            )}
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Corner Radius: {(rect.cornerRadius || 0).toFixed(0)}%
+              </label>
+              <input
+                type="range"
+                value={rect.cornerRadius || 0}
+                onChange={(e) => handleChange('cornerRadius', parseInt(e.target.value))}
+                className="w-full"
+                min={CONSTRAINTS.rectangle.cornerRadius.min}
+                max={CONSTRAINTS.rectangle.cornerRadius.max}
+              />
+            </div>
           </>
         );
       }
@@ -198,8 +197,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
               value={circle.radius.toFixed(1)}
               onChange={(e) => handleChange('radius', parseFloat(e.target.value) || 1)}
               className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-              min="1"
-              max="50"
+              min={CONSTRAINTS.circle.radius.min}
+              max={CONSTRAINTS.circle.radius.max}
               step="0.1"
             />
           </div>
@@ -229,8 +228,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
                 value={text.fontSize}
                 onChange={(e) => handleChange('fontSize', parseInt(e.target.value))}
                 className="w-full"
-                min="1"
-                max="50"
+                min={CONSTRAINTS.text.fontSize.min}
+                max={CONSTRAINTS.text.fontSize.max}
               />
             </div>
 

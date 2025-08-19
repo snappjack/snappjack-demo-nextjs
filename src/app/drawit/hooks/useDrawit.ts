@@ -16,6 +16,30 @@ import { CanvasHandle } from '../components/Canvas';
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 800;
 
+// Object dimension constraints
+export const CONSTRAINTS = {
+  rectangle: {
+    width: { min: 1, max: 100 },
+    height: { min: 1, max: 100 },
+    cornerRadius: { min: 0, max: 100 }
+  },
+  circle: {
+    radius: { min: 1, max: 50 }
+  },
+  text: {
+    fontSize: { min: 1, max: 50 }
+  },
+  common: {
+    position: { min: 0, max: 100 },
+    strokeWidth: { min: 1, max: 20 },
+    rotation: { min: -360, max: 360 }
+  },
+  polygon: {
+    maxVertices: 50,
+    minVertices: 3
+  }
+};
+
 export const useDrawit = () => {
   const [drawingState, setDrawingState] = useState<DrawingState>({
     objects: [],
@@ -114,116 +138,6 @@ export const useDrawit = () => {
     return { minX, minY, maxX, maxY, width, height };
   }, []);
 
-  const getSystemInfo = useCallback((): string => {
-    const objectCount = drawingStateRef.current.objects.length;
-    const currentTime = new Date().toLocaleString();
-    
-    const docs = `# DrawIt Canvas System
-
-**System Status**: Active at ${currentTime}
-**Current Objects**: ${objectCount} objects on canvas
-**Canvas Size**: ${CANVAS_WIDTH}×${CANVAS_HEIGHT} pixels (square format)
-
-## Coordinate System
-- **Percentage-based**: All positions use 0-100% instead of pixels
-- **Square canvas**: 800×800 pixels means 1% X = 1% Y for consistent scaling
-- **Center-point positioning**: All coordinates specify object centers, not corners/edges
-- **Canvas bounds**: Objects automatically clamped to stay within canvas
-- **Examples**: (50, 50) = center of canvas, (0, 0) = top-left, (100, 100) = bottom-right
-
-## Size and Positioning
-- **Rectangles**: width/height as % of canvas dimensions
-- **Circles**: radius as % of canvas dimension (max 50%)
-- **Text**: fontSize as % of canvas height
-- **Polygons**: defined by array of vertices (x,y coordinates as %), automatically closed, 3-50 vertices
-- **Rotation**: All objects can rotate around their center point (-360° to 360°)
-
-## Object Management
-- **Object Names**: Every object has a unique \`name\` property (defaults to type_id like "rectangle_abc123")
-- **Renaming Objects**: Use any object tool with \`id\` and \`name\` parameters to rename (e.g., \`rectangle(id: "abc123", name: "Sky")\`)
-- **Unified Tools**: Each object type has one tool that creates (no ID) or modifies (with ID)
-- **Type Safety**: Tools are object-specific - use \`rectangle\` for rectangles, \`circle\` for circles, etc.
-- **Deletion**: Remove objects by ID using \`deleteObject\`
-- **Status Check**: Use \`getStatus\` to see complete object list with all properties including names
-- **Reordering**: Move objects up/down in drawing stack or to front/back with \`reorderObject\`
-- **Bounding boxes**: Automatic calculation and tracking in percentage coordinates
-- **Validation**: All parameters automatically validated and clamped to safe ranges
-
-## Drawing Order and Layering
-- **Order Rule**: Objects are drawn from beginning to end of the objects array
-- **Layering**: Objects drawn later appear **in front of** objects drawn earlier
-- **Array Position**: First object in array = bottom layer, last object = top layer
-- **Overlap Behavior**: When objects overlap, later objects visually cover earlier objects
-- **Reordering Tools**: Use \`reorderObject\` to change layer positions:
-  - \`"up"\` - moves object one position forward (more visible)
-  - \`"down"\` - moves object one position backward (less visible)  
-  - \`"top"\` - moves object to front (most visible)
-  - \`"bottom"\` - moves object to back (least visible)
-  - \`"above"\` + referenceId - places object in front of specified object
-  - \`"below"\` + referenceId - places object behind specified object
-- **Strategy**: Create background elements first, then add foreground details on top
-- **Precise Positioning**: Use \`above\`/\`below\` for exact layering relative to other objects
-
-## Available Tools
-- **Object Tools**: \`rectangle\`, \`circle\`, \`text\`, \`polygon\` (create new without ID, modify existing with ID)
-- **Management**: \`reorderObject\`, \`deleteObject\`
-- **Status**: \`getStatus\` - returns complete object list, canvas info, and visual screenshot
-- **Utility**: \`clearCanvas\`
-- **Info**: \`systemInfo.get\` - returns this documentation
-
-## Interactive Canvas Features
-- **Object Selection**: Click on any object to select it (shows blue highlight)
-- **Object Movement**: Drag selected objects to move them around the canvas
-- **Visual Feedback**: Selected objects are highlighted with a blue dashed outline
-
-## Usage Examples
-- **Create rectangle**: \`rectangle(x: 50, y: 50, width: 20, height: 10, color: "blue")\`
-- **Rename object**: \`rectangle(id: "abc123", name: "Sky Background")\`
-- **Modify rectangle**: \`rectangle(id: "abc123", color: "red", width: 30)\`
-- **Create circle**: \`circle(x: 25, y: 75, radius: 15, color: "green")\`
-- **Rename and modify**: \`circle(id: "xyz789", name: "Sun", color: "yellow", fillColor: "orange")\`
-- **Modify text**: \`text(id: "xyz789", fontSize: 8, color: "purple")\`
-- **Create triangle**: \`polygon(vertices: [{x: 50, y: 20}, {x: 30, y: 60}, {x: 70, y: 60}], color: "red")\`
-- **Create diamond**: \`polygon(vertices: [{x: 50, y: 10}, {x: 80, y: 50}, {x: 50, y: 90}, {x: 20, y: 50}], color: "blue", fillColor: "lightblue")\`
-- **Rename polygon**: \`polygon(id: "def456", name: "Mountain", color: "orange", strokeWidth: 3)\`
-- **Check everything**: \`getStatus()\` - Get complete object list with all properties including names
-
-## Layering Examples
-- **Background first**: \`rectangle(x: 50, y: 50, width: 80, height: 60, fillColor: "lightblue", name: "Sky")\` (drawn first = back layer)
-- **Add middle layer**: \`circle(x: 30, y: 70, radius: 20, fillColor: "brown", name: "Tree")\` (drawn second = middle layer)  
-- **Add foreground**: \`text(x: 50, y: 30, text: "My Scene", fontSize: 10, color: "white")\` (drawn last = front layer)
-
-### Simple Reordering:
-- **Bring to front**: \`reorderObject(id: "tree_id", operation: "top")\` - brings tree to front
-- **Send to back**: \`reorderObject(id: "text_id", operation: "bottom")\` - sends text behind everything
-- **Move up one**: \`reorderObject(id: "sky_id", operation: "up")\` - moves sky forward one layer
-
-### Precise Reordering:
-- **Above specific object**: \`reorderObject(id: "bird_id", operation: "above", referenceId: "tree_id")\` - puts bird in front of tree
-- **Below specific object**: \`reorderObject(id: "shadow_id", operation: "below", referenceId: "tree_id")\` - puts shadow behind tree
-- **Complex scene**: Create sun, then \`reorderObject(id: "sun_id", operation: "below", referenceId: "cloud_id")\` to put sun behind clouds
-
-## Recommended Workflow
-1. **Check Status**: Use \`getStatus\` to see current objects and visual screenshot
-2. **Create/Modify**: Use object tools (\`rectangle\`, \`circle\`, \`text\`, \`polygon\`) to build your design
-3. **Fine-tune**: Modify specific objects by their ID to adjust properties
-4. **Reorder**: Use \`reorderObject\` to change drawing order if needed
-5. **Validate**: Use \`getStatus\` again to see the updated result with visual feedback
-
-## Special Notes for Polygons
-- **Auto-closing**: Polygons automatically connect the last vertex back to the first
-- **Vertex limits**: Minimum 3 vertices, maximum 50 vertices
-- **Center calculation**: Object center is calculated as the centroid of all vertices
-- **Flexibility**: Great for creating custom shapes like triangles, pentagons, stars, arrows, etc.
-
-## Color and Styling
-- **Colors**: Any valid CSS color (e.g., "red", "#FF0000", "rgb(255,0,0)")
-- **Fill vs Stroke**: Objects can have both fillColor and stroke color
-- **Stroke Width**: Adjustable line thickness (1-20 pixels)
-- **Corner Radius**: Rectangles support rounded corners (0-50% of smaller dimension)`;
-    
-    return docs;
-  }, []);
 
   const addRectangle = useCallback((params: {
     x?: number;
@@ -262,15 +176,15 @@ export const useDrawit = () => {
       id,
       name: `rectangle_${id}`,
       type: 'rectangle',
-      x: clamp(x, 0, 100),
-      y: clamp(y, 0, 100),
-      width: clamp(width, 1, 100),
-      height: clamp(height, 1, 100),
+      x: clamp(x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
+      y: clamp(y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
+      width: clamp(width, CONSTRAINTS.rectangle.width.min, CONSTRAINTS.rectangle.width.max),
+      height: clamp(height, CONSTRAINTS.rectangle.height.min, CONSTRAINTS.rectangle.height.max),
       color,
       fillColor,
-      strokeWidth: clamp(strokeWidth, 1, 20),
-      rotation: clamp(rotation, -360, 360),
-      cornerRadius: cornerRadius > 0 ? clamp(cornerRadius, 0, 50) : undefined,
+      strokeWidth: clamp(strokeWidth, CONSTRAINTS.common.strokeWidth.min, CONSTRAINTS.common.strokeWidth.max),
+      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
+      cornerRadius: clamp(cornerRadius, CONSTRAINTS.rectangle.cornerRadius.min, CONSTRAINTS.rectangle.cornerRadius.max),
       boundingBox: {} as BoundingBox
     };
     
@@ -317,13 +231,13 @@ export const useDrawit = () => {
       id,
       name: `circle_${id}`,
       type: 'circle',
-      x: clamp(x, 0, 100),
-      y: clamp(y, 0, 100),
-      radius: clamp(radius, 1, 50),
+      x: clamp(x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
+      y: clamp(y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
+      radius: clamp(radius, CONSTRAINTS.circle.radius.min, CONSTRAINTS.circle.radius.max),
       color,
       fillColor,
-      strokeWidth: clamp(strokeWidth, 1, 20),
-      rotation: clamp(rotation, -360, 360),
+      strokeWidth: clamp(strokeWidth, CONSTRAINTS.common.strokeWidth.min, CONSTRAINTS.common.strokeWidth.max),
+      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
       boundingBox: {} as BoundingBox
     };
     
@@ -368,14 +282,14 @@ export const useDrawit = () => {
       id,
       name: `text_${id}`,
       type: 'text',
-      x: clamp(x, 0, 100),
-      y: clamp(y, 0, 100),
+      x: clamp(x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
+      y: clamp(y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
       text,
-      fontSize: clamp(fontSize, 1, 50),
+      fontSize: clamp(fontSize, CONSTRAINTS.text.fontSize.min, CONSTRAINTS.text.fontSize.max),
       color,
       fontFamily,
       fontWeight,
-      rotation: clamp(rotation, -360, 360),
+      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
       boundingBox: {} as BoundingBox
     };
     
@@ -416,11 +330,11 @@ export const useDrawit = () => {
     if (fillColor && !validateColor(fillColor)) {
       throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
     }
-    if (vertices.length < 3) {
-      throw new Error('Polygon must have at least 3 vertices');
+    if (vertices.length < CONSTRAINTS.polygon.minVertices) {
+      throw new Error(`Polygon must have at least ${CONSTRAINTS.polygon.minVertices} vertices`);
     }
-    if (vertices.length > 50) {
-      throw new Error('Polygon cannot have more than 50 vertices');
+    if (vertices.length > CONSTRAINTS.polygon.maxVertices) {
+      throw new Error(`Polygon cannot have more than ${CONSTRAINTS.polygon.maxVertices} vertices`);
     }
     
     const validatedVertices = vertices.map((vertex, index) => {
@@ -428,8 +342,8 @@ export const useDrawit = () => {
         throw new Error(`Vertex ${index + 1} must have numeric x and y coordinates`);
       }
       return {
-        x: clamp(vertex.x, 0, 100),
-        y: clamp(vertex.y, 0, 100)
+        x: clamp(vertex.x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
+        y: clamp(vertex.y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max)
       };
     });
     
@@ -446,8 +360,8 @@ export const useDrawit = () => {
       vertices: validatedVertices,
       color,
       fillColor,
-      strokeWidth: clamp(strokeWidth, 1, 20),
-      rotation: clamp(rotation, -360, 360),
+      strokeWidth: clamp(strokeWidth, CONSTRAINTS.common.strokeWidth.min, CONSTRAINTS.common.strokeWidth.max),
+      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
       boundingBox: {} as BoundingBox
     };
     
@@ -676,7 +590,8 @@ export const useDrawit = () => {
               height,
               color: defaultStrokeColor,
               fillColor: defaultFillColor,
-              strokeWidth: 2
+              strokeWidth: 2,
+              cornerRadius: 0
             });
           }
           break;
@@ -916,8 +831,8 @@ export const useDrawit = () => {
       // Apply with minimum constraints
       rect.x = newCenterX;
       rect.y = newCenterY;
-      rect.width = Math.max(1, projectedWidth);
-      rect.height = Math.max(1, projectedHeight);
+      rect.width = Math.max(CONSTRAINTS.rectangle.width.min, projectedWidth);
+      rect.height = Math.max(CONSTRAINTS.rectangle.height.min, projectedHeight);
     } else if (originalObject.type === 'circle') {
       const circle = updatedObject as CircleObject;
       const startCircle = originalObject as CircleObject;
@@ -926,7 +841,7 @@ export const useDrawit = () => {
       // Use the local transformed coordinates for consistent behavior
       const deltaX = Math.abs(localNew.x - startCircle.x);
       const deltaY = Math.abs(localNew.y - startCircle.y);
-      const newRadius = Math.max(1, Math.min(50, Math.max(deltaX, deltaY)));
+      const newRadius = Math.max(CONSTRAINTS.circle.radius.min, Math.min(CONSTRAINTS.circle.radius.max, Math.max(deltaX, deltaY)));
       circle.radius = newRadius;
     }
     
@@ -1060,7 +975,6 @@ export const useDrawit = () => {
   return {
     drawingState,
     canvasRef,
-    getSystemInfo,
     addRectangle,
     addCircle,
     addText,

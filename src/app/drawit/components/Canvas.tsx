@@ -77,8 +77,97 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   const getObjectAtPoint = useCallback((x: number, y: number): CanvasObject | null => {
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i];
-      const bbox = obj.boundingBox;
-      if (x >= bbox.minX && x <= bbox.maxX && y >= bbox.minY && y <= bbox.maxY) {
+      
+      // Transform point to object's local space if rotated
+      let testX = x;
+      let testY = y;
+      
+      if (obj.rotation && obj.type !== 'polygon') {
+        // Don't transform for polygons as their vertices are already in world space
+        const rotation = -obj.rotation * Math.PI / 180; // Negative for inverse rotation
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        
+        // Translate point to origin (object center)
+        const dx = x - obj.x;
+        const dy = y - obj.y;
+        
+        // Rotate point around origin (inverse rotation)
+        testX = obj.x + (dx * cos - dy * sin);
+        testY = obj.y + (dx * sin + dy * cos);
+      }
+      
+      // Check based on object type
+      let isInside = false;
+      
+      switch (obj.type) {
+        case 'circle': {
+          const circle = obj as CircleObject;
+          const distance = Math.sqrt(Math.pow(testX - obj.x, 2) + Math.pow(testY - obj.y, 2));
+          const tolerance = 0.5; // Small tolerance in percentage units
+          isInside = distance <= (circle.radius + tolerance);
+          break;
+        }
+        case 'polygon': {
+          const polygon = obj as PolygonObject;
+          // For polygons, check if the point is inside the rotated polygon
+          let inside = false;
+          const vertices = polygon.vertices;
+          
+          if (polygon.rotation) {
+            // Apply rotation to vertices
+            const rotation = polygon.rotation * Math.PI / 180;
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
+            const rotatedVertices = vertices.map(v => {
+              const dx = v.x - polygon.x;
+              const dy = v.y - polygon.y;
+              return {
+                x: polygon.x + dx * cos - dy * sin,
+                y: polygon.y + dx * sin + dy * cos
+              };
+            });
+            
+            // Point-in-polygon test on rotated vertices
+            for (let j = 0, k = rotatedVertices.length - 1; j < rotatedVertices.length; k = j++) {
+              const xi = rotatedVertices[j].x;
+              const yi = rotatedVertices[j].y;
+              const xj = rotatedVertices[k].x;
+              const yj = rotatedVertices[k].y;
+              
+              const intersect = ((yi > y) !== (yj > y))
+                  && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+              if (intersect) inside = !inside;
+            }
+          } else {
+            // No rotation, use original vertices
+            for (let j = 0, k = vertices.length - 1; j < vertices.length; k = j++) {
+              const xi = vertices[j].x;
+              const yi = vertices[j].y;
+              const xj = vertices[k].x;
+              const yj = vertices[k].y;
+              
+              const intersect = ((yi > y) !== (yj > y))
+                  && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+              if (intersect) inside = !inside;
+            }
+          }
+          isInside = inside;
+          break;
+        }
+        case 'rectangle':
+        case 'text':
+        default: {
+          // Use bounding box for rectangles and text with small tolerance for edge cases
+          const bbox = obj.boundingBox;
+          const tolerance = 0.5; // Small tolerance in percentage units
+          isInside = testX >= (bbox.minX - tolerance) && testX <= (bbox.maxX + tolerance) && 
+                     testY >= (bbox.minY - tolerance) && testY <= (bbox.maxY + tolerance);
+          break;
+        }
+      }
+      
+      if (isInside) {
         return obj;
       }
     }
@@ -87,7 +176,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
   const getHandleAtPoint = useCallback((x: number, y: number, obj: CanvasObject): string | null => {
     const bbox = obj.boundingBox;
-    const handleSize = 8;
+    const handleSize = 12; // Increased for easier clicking
     
     // Convert to pixel coordinates
     const pixelX = percentToPixelX(x);
@@ -98,8 +187,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const right = percentToPixelX(bbox.maxX);
     const top = percentToPixelY(bbox.minY);
     const bottom = percentToPixelY(bbox.maxY);
-    const centerX = (left + right) / 2;
-    const centerY = (top + bottom) / 2;
+    const centerX = percentToPixelX(obj.x);  // Use actual center for accuracy
+    const centerY = percentToPixelY(obj.y);
     
     // Convert rotation to radians
     const rotation = (obj.rotation || 0) * Math.PI / 180;
@@ -120,8 +209,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const localMouse = rotatePoint(pixelX, pixelY);
     
     // Check rotation handle (above the object, also rotated)
-    // The rotation handle is at the top center, 20 pixels above
-    const rotationHandleLocal = { x: centerX, y: top - 20 };
+    // The rotation handle is at the top center, 30 pixels above (increased distance)
+    const rotationHandleLocal = { x: centerX, y: top - 30 };
     
     // Rotate the handle position to match the object's rotation
     const cos = Math.cos(rotation);
@@ -133,8 +222,9 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       y: centerY + dx * sin + dy * cos
     };
     
-    // Check if mouse is near rotation handle in world space
-    if (Math.abs(pixelX - rotationHandle.x) < handleSize && Math.abs(pixelY - rotationHandle.y) < handleSize) {
+    // Check if mouse is near rotation handle in world space (use circle distance for better detection)
+    const distToRotHandle = Math.sqrt(Math.pow(pixelX - rotationHandle.x, 2) + Math.pow(pixelY - rotationHandle.y, 2));
+    if (distToRotHandle < handleSize) {
       return 'rotate';
     }
     
@@ -393,11 +483,12 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       ctx.fillRect(hx, hy, handleSize, handleSize);
     });
 
-    // Draw rotation handle
-    const rotationHandleY = y - 20;
-    const centerX = x + w / 2;
+    // Draw rotation handle - use object's actual center for consistency
+    const objCenterX = percentToPixelX(obj.x);
+    const objCenterY = percentToPixelY(obj.y);
+    const rotationHandleY = y - 30; // Match the increased distance
     ctx.beginPath();
-    ctx.arc(centerX, rotationHandleY, 6, 0, 2 * Math.PI);
+    ctx.arc(objCenterX, rotationHandleY, 8, 0, 2 * Math.PI); // Larger handle
     ctx.fillStyle = '#ff6b6b';
     ctx.fill();
     ctx.strokeStyle = '#00aaff';
@@ -406,8 +497,8 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
     // Draw line from object to rotation handle
     ctx.beginPath();
-    ctx.moveTo(centerX, y);
-    ctx.lineTo(centerX, rotationHandleY);
+    ctx.moveTo(objCenterX, y);
+    ctx.lineTo(objCenterX, rotationHandleY);
     ctx.strokeStyle = '#00aaff';
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 2]);
