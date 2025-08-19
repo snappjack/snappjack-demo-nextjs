@@ -146,14 +146,28 @@ export const useDrawit = () => {
 - **Deletion**: Remove objects by ID using \`deleteObject\`
 - **Status Check**: Use \`getStatus\` to see complete object list with all properties including names
 - **Reordering**: Move objects up/down in drawing stack or to front/back with \`reorderObject\`
-- **Drawing order**: Objects drawn in array order (later = on top)
 - **Bounding boxes**: Automatic calculation and tracking in percentage coordinates
 - **Validation**: All parameters automatically validated and clamped to safe ranges
+
+## Drawing Order and Layering
+- **Order Rule**: Objects are drawn from beginning to end of the objects array
+- **Layering**: Objects drawn later appear **in front of** objects drawn earlier
+- **Array Position**: First object in array = bottom layer, last object = top layer
+- **Overlap Behavior**: When objects overlap, later objects visually cover earlier objects
+- **Reordering Tools**: Use \`reorderObject\` to change layer positions:
+  - \`"up"\` - moves object one position forward (more visible)
+  - \`"down"\` - moves object one position backward (less visible)  
+  - \`"top"\` - moves object to front (most visible)
+  - \`"bottom"\` - moves object to back (least visible)
+  - \`"above"\` + referenceId - places object in front of specified object
+  - \`"below"\` + referenceId - places object behind specified object
+- **Strategy**: Create background elements first, then add foreground details on top
+- **Precise Positioning**: Use \`above\`/\`below\` for exact layering relative to other objects
 
 ## Available Tools
 - **Object Tools**: \`rectangle\`, \`circle\`, \`text\`, \`polygon\` (create new without ID, modify existing with ID)
 - **Management**: \`reorderObject\`, \`deleteObject\`
-- **Status**: \`getStatus\` - returns complete object list and canvas info
+- **Status**: \`getStatus\` - returns complete object list, canvas info, and visual screenshot
 - **Utility**: \`clearCanvas\`
 - **Info**: \`systemInfo.get\` - returns this documentation
 
@@ -174,12 +188,27 @@ export const useDrawit = () => {
 - **Rename polygon**: \`polygon(id: "def456", name: "Mountain", color: "orange", strokeWidth: 3)\`
 - **Check everything**: \`getStatus()\` - Get complete object list with all properties including names
 
+## Layering Examples
+- **Background first**: \`rectangle(x: 50, y: 50, width: 80, height: 60, fillColor: "lightblue", name: "Sky")\` (drawn first = back layer)
+- **Add middle layer**: \`circle(x: 30, y: 70, radius: 20, fillColor: "brown", name: "Tree")\` (drawn second = middle layer)  
+- **Add foreground**: \`text(x: 50, y: 30, text: "My Scene", fontSize: 10, color: "white")\` (drawn last = front layer)
+
+### Simple Reordering:
+- **Bring to front**: \`reorderObject(id: "tree_id", operation: "top")\` - brings tree to front
+- **Send to back**: \`reorderObject(id: "text_id", operation: "bottom")\` - sends text behind everything
+- **Move up one**: \`reorderObject(id: "sky_id", operation: "up")\` - moves sky forward one layer
+
+### Precise Reordering:
+- **Above specific object**: \`reorderObject(id: "bird_id", operation: "above", referenceId: "tree_id")\` - puts bird in front of tree
+- **Below specific object**: \`reorderObject(id: "shadow_id", operation: "below", referenceId: "tree_id")\` - puts shadow behind tree
+- **Complex scene**: Create sun, then \`reorderObject(id: "sun_id", operation: "below", referenceId: "cloud_id")\` to put sun behind clouds
+
 ## Recommended Workflow
-1. **Check Status**: Use \`getStatus\` to see current objects
+1. **Check Status**: Use \`getStatus\` to see current objects and visual screenshot
 2. **Create/Modify**: Use object tools (\`rectangle\`, \`circle\`, \`text\`, \`polygon\`) to build your design
 3. **Fine-tune**: Modify specific objects by their ID to adjust properties
 4. **Reorder**: Use \`reorderObject\` to change drawing order if needed
-5. **Validate**: Use \`getStatus\` again to see the updated result
+5. **Validate**: Use \`getStatus\` again to see the updated result with visual feedback
 
 ## Special Notes for Polygons
 - **Auto-closing**: Polygons automatically connect the last vertex back to the first
@@ -197,24 +226,35 @@ export const useDrawit = () => {
   }, []);
 
   const addRectangle = useCallback((params: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    color: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    color?: string;
     fillColor?: string;
     strokeWidth?: number;
     rotation?: number;
     cornerRadius?: number;
   }): RectangleObject => {
     
-    const { x, y, width, height, color, fillColor, strokeWidth, rotation, cornerRadius } = params;
+    const { 
+      x = 50, 
+      y = 50, 
+      width = 20, 
+      height = 15, 
+      color = defaultStrokeColor, 
+      fillColor = defaultFillColor, 
+      strokeWidth = 2, 
+      rotation = 0, 
+      cornerRadius = 0  
+    } = params;
+
     
     if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color}`);
+      throw new Error(`Invalid color: ${color || 'undefined'}`);
     }
     if (fillColor && !validateColor(fillColor)) {
-      throw new Error(`Invalid fill color: ${fillColor}`);
+      throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
     }
     
     const id = generateId();
@@ -228,9 +268,9 @@ export const useDrawit = () => {
       height: clamp(height, 1, 100),
       color,
       fillColor,
-      strokeWidth: strokeWidth ? clamp(strokeWidth, 1, 20) : 2,
-      rotation: rotation ? clamp(rotation, -360, 360) : 0,
-      cornerRadius: cornerRadius ? clamp(cornerRadius, 0, 50) : undefined,
+      strokeWidth: clamp(strokeWidth, 1, 20),
+      rotation: clamp(rotation, -360, 360),
+      cornerRadius: cornerRadius > 0 ? clamp(cornerRadius, 0, 50) : undefined,
       boundingBox: {} as BoundingBox
     };
     
@@ -242,25 +282,34 @@ export const useDrawit = () => {
     }));
     
     return rectangle;
-  }, [generateId, validateColor, clamp, calculateBoundingBox]);
+  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor, defaultFillColor]);
 
   const addCircle = useCallback((params: {
-    x: number;
-    y: number;
-    radius: number;
-    color: string;
+    x?: number;
+    y?: number;
+    radius?: number;
+    color?: string;
     fillColor?: string;
     strokeWidth?: number;
     rotation?: number;
   }): CircleObject => {
     
-    const { x, y, radius, color, fillColor, strokeWidth, rotation } = params;
+    const { 
+      x = 50, 
+      y = 50, 
+      radius = 15, 
+      color = defaultStrokeColor, 
+      fillColor = defaultFillColor, 
+      strokeWidth = 2, 
+      rotation = 0 
+    } = params;
+
     
     if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color}`);
+      throw new Error(`Invalid color: ${color || 'undefined'}`);
     }
     if (fillColor && !validateColor(fillColor)) {
-      throw new Error(`Invalid fill color: ${fillColor}`);
+      throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
     }
     
     const id = generateId();
@@ -273,8 +322,8 @@ export const useDrawit = () => {
       radius: clamp(radius, 1, 50),
       color,
       fillColor,
-      strokeWidth: strokeWidth ? clamp(strokeWidth, 1, 20) : 2,
-      rotation: rotation ? clamp(rotation, -360, 360) : 0,
+      strokeWidth: clamp(strokeWidth, 1, 20),
+      rotation: clamp(rotation, -360, 360),
       boundingBox: {} as BoundingBox
     };
     
@@ -286,26 +335,32 @@ export const useDrawit = () => {
     }));
     
     return circle;
-  }, [generateId, validateColor, clamp, calculateBoundingBox]);
+  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor, defaultFillColor]);
 
   const addText = useCallback((params: {
-    x: number;
-    y: number;
-    text: string;
-    fontSize: number;
-    color: string;
+    x?: number;
+    y?: number;
+    text?: string;
+    fontSize?: number;
+    color?: string;
     fontFamily?: string;
     fontWeight?: string;
     rotation?: number;
   }): TextObject => {
     
-    const { x, y, text, fontSize, color, fontFamily, fontWeight, rotation } = params;
-    
+    const { 
+      x = 50, 
+      y = 50, 
+      text = 'Text', 
+      fontSize = 5, 
+      color = defaultStrokeColor, 
+      fontFamily = 'Arial', 
+      fontWeight = 'normal', 
+      rotation = 0 
+    } = params;
+
     if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color}`);
-    }
-    if (text.length === 0) {
-      throw new Error('Text cannot be empty');
+      throw new Error(`Invalid color: ${color || 'undefined'}`);
     }
     
     const id = generateId();
@@ -318,9 +373,9 @@ export const useDrawit = () => {
       text,
       fontSize: clamp(fontSize, 1, 50),
       color,
-      fontFamily: fontFamily || 'Arial',
-      fontWeight: fontWeight || 'normal',
-      rotation: rotation ? clamp(rotation, -360, 360) : 0,
+      fontFamily,
+      fontWeight,
+      rotation: clamp(rotation, -360, 360),
       boundingBox: {} as BoundingBox
     };
     
@@ -332,23 +387,34 @@ export const useDrawit = () => {
     }));
     
     return textObject;
-  }, [generateId, validateColor, clamp, calculateBoundingBox]);
+  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor]);
 
   const addPolygon = useCallback((params: {
-    vertices: Array<{ x: number; y: number }>;
-    color: string;
+    vertices?: Array<{ x: number; y: number }>;
+    color?: string;
     fillColor?: string;
     strokeWidth?: number;
     rotation?: number;
   }): PolygonObject => {
     
-    const { vertices, color, fillColor, strokeWidth, rotation } = params;
+    const { 
+      vertices = [
+        { x: 50, y: 20 }, 
+        { x: 30, y: 60 }, 
+        { x: 70, y: 60 }
+      ], 
+      color = defaultStrokeColor, 
+      fillColor = defaultFillColor, 
+      strokeWidth = 2, 
+      rotation = 0 
+    } = params;
+
     
     if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color}`);
+      throw new Error(`Invalid color: ${color || 'undefined'}`);
     }
     if (fillColor && !validateColor(fillColor)) {
-      throw new Error(`Invalid fill color: ${fillColor}`);
+      throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
     }
     if (vertices.length < 3) {
       throw new Error('Polygon must have at least 3 vertices');
@@ -380,8 +446,8 @@ export const useDrawit = () => {
       vertices: validatedVertices,
       color,
       fillColor,
-      strokeWidth: strokeWidth ? clamp(strokeWidth, 1, 20) : 2,
-      rotation: rotation ? clamp(rotation, -360, 360) : 0,
+      strokeWidth: clamp(strokeWidth, 1, 20),
+      rotation: clamp(rotation, -360, 360),
       boundingBox: {} as BoundingBox
     };
     
@@ -393,7 +459,7 @@ export const useDrawit = () => {
     }));
     
     return polygon;
-  }, [generateId, validateColor, clamp, calculateBoundingBox]);
+  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor, defaultFillColor]);
 
   const modifyObject = useCallback((id: string, updates: Partial<CanvasObject>): CanvasObject => {
     
@@ -426,7 +492,7 @@ export const useDrawit = () => {
     }));
   }, []);
 
-  const reorderObject = useCallback((id: string, operation: 'up' | 'down' | 'top' | 'bottom'): void => {
+  const reorderObject = useCallback((id: string, operation: 'up' | 'down' | 'top' | 'bottom' | 'above' | 'below', referenceId?: string): void => {
     
     const currentState = drawingStateRef.current;
     const currentIndex = currentState.objects.findIndex(obj => obj.id === id);
@@ -449,6 +515,31 @@ export const useDrawit = () => {
         break;
       case 'bottom':
         newIndex = 0;
+        break;
+      case 'above':
+      case 'below':
+        if (!referenceId) {
+          throw new Error(`Reference ID is required for "${operation}" operation`);
+        }
+        const referenceIndex = currentState.objects.findIndex(obj => obj.id === referenceId);
+        if (referenceIndex === -1) {
+          throw new Error(`Reference object with ID "${referenceId}" not found`);
+        }
+        if (operation === 'above') {
+          // Place object in front of (after) the reference object in array
+          newIndex = referenceIndex + 1;
+          // If we're moving an object from before the reference, adjust for the removal
+          if (currentIndex < referenceIndex) {
+            newIndex = referenceIndex;
+          }
+        } else { // below
+          // Place object behind (before) the reference object in array
+          newIndex = referenceIndex;
+          // If we're moving an object from after the reference, adjust for the removal
+          if (currentIndex > referenceIndex) {
+            newIndex = referenceIndex;
+          }
+        }
         break;
     }
     

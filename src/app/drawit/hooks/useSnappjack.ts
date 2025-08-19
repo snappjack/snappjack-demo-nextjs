@@ -11,11 +11,11 @@ if (!appId || !apiKey) {
 }
 
 interface RectangleParams {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  color?: string;
   fillColor?: string;
   strokeWidth?: number;
   rotation?: number;
@@ -23,29 +23,29 @@ interface RectangleParams {
 }
 
 interface CircleParams {
-  x: number;
-  y: number;
-  radius: number;
-  color: string;
+  x?: number;
+  y?: number;
+  radius?: number;
+  color?: string;
   fillColor?: string;
   strokeWidth?: number;
   rotation?: number;
 }
 
 interface TextParams {
-  x: number;
-  y: number;
-  text: string;
-  fontSize: number;
-  color: string;
+  x?: number;
+  y?: number;
+  text?: string;
+  fontSize?: number;
+  color?: string;
   fontFamily?: string;
   fontWeight?: string;
   rotation?: number;
 }
 
 interface PolygonParams {
-  vertices: Array<{ x: number; y: number }>;
-  color: string;
+  vertices?: Array<{ x: number; y: number }>;
+  color?: string;
   fillColor?: string;
   strokeWidth?: number;
   rotation?: number;
@@ -59,10 +59,28 @@ interface SnappjackHookProps {
   addPolygon: (params: PolygonParams) => PolygonObject;
   modifyObject: (id: string, updates: Partial<CanvasObject>) => CanvasObject;
   deleteObject: (id: string) => void;
-  reorderObject: (id: string, operation: 'up' | 'down' | 'top' | 'bottom') => void;
+  reorderObject: (id: string, operation: 'up' | 'down' | 'top' | 'bottom' | 'above' | 'below', referenceId?: string) => void;
   clearCanvas: () => void;
   getCanvasStatus: () => CanvasStatus;
   getCanvasImage: () => string;
+}
+
+// Helper function to format numeric values with limited precision
+function formatNumericValue<T>(value: T, decimals: number = 2): T {
+  if (typeof value === 'number') {
+    return (Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals)) as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map(item => formatNumericValue(item, decimals)) as T;
+  }
+  if (value && typeof value === 'object') {
+    const formatted: Record<string, unknown> = {};
+    for (const key in value) {
+      formatted[key] = formatNumericValue((value as Record<string, unknown>)[key], decimals);
+    }
+    return formatted as T;
+  }
+  return value;
 }
 
 export const useSnappjack = ({ 
@@ -105,224 +123,155 @@ export const useSnappjack = ({
   });
 
   handlersRef.current.handleSystemInfo = useCallback(async (): Promise<ToolResponse> => {
-    try {
-      const info = getSystemInfo();
-      return {
-        content: [{
-          type: 'text',
-          text: info
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
+    const info = getSystemInfo();
+    return {
+      content: [{
+        type: 'text',
+        text: info
+      }]
+    };
   }, [getSystemInfo]);
 
   handlersRef.current.handleRectangle = useCallback(async (args: unknown): Promise<ToolResponse> => {
-    try {
-      const params = args as Record<string, unknown>;
-      let result: CanvasObject;
-      
-      if (params.id) {
-        const { id, ...updates } = params;
-        result = modifyObject(id as string, updates as Partial<CanvasObject>);
-      } else {
-        result = addRectangle(params as unknown as RectangleParams);
-      }
-      
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(result)
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
+    const params = args as Record<string, unknown>;
+    let result: CanvasObject;
+    
+    if (params.id) {
+      const { id, ...updates } = params as { id: string; [key: string]: unknown };
+      result = modifyObject(id, updates as Partial<CanvasObject>);
+    } else {
+      const rectParams = params as unknown as RectangleParams;
+      result = addRectangle(rectParams);
     }
+    
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify(formatNumericValue(result))
+      }]
+    };
   }, [addRectangle, modifyObject]);
 
   handlersRef.current.handleCircle = useCallback(async (args: unknown): Promise<ToolResponse> => {
-    try {
-      const params = args as Record<string, unknown>;
+    const params = args as Record<string, unknown>;
       let result: CanvasObject;
       
       if (params.id) {
-        const { id, ...updates } = params;
+        const { id, ...updates } = params as Record<string, unknown>;
         result = modifyObject(id as string, updates as Partial<CanvasObject>);
       } else {
-        result = addCircle(params as unknown as CircleParams);
+        const circleParams = params as unknown as CircleParams;
+        result = addCircle(circleParams);
       }
       
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: JSON.stringify(formatNumericValue(result))
         }]
       };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
   }, [addCircle, modifyObject]);
 
   handlersRef.current.handleText = useCallback(async (args: unknown): Promise<ToolResponse> => {
-    try {
-      const params = args as Record<string, unknown>;
+    const params = args as Record<string, unknown>;
       let result: CanvasObject;
       
       if (params.id) {
-        const { id, ...updates } = params;
+        const { id, ...updates } = params as Record<string, unknown>;
         result = modifyObject(id as string, updates as Partial<CanvasObject>);
       } else {
-        result = addText(params as unknown as TextParams);
+        const textParams = params as Record<string, unknown>;
+        result = addText(textParams as unknown as TextParams);
       }
       
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: JSON.stringify(formatNumericValue(result))
         }]
       };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
   }, [addText, modifyObject]);
 
   handlersRef.current.handlePolygon = useCallback(async (args: unknown): Promise<ToolResponse> => {
-    try {
-      const params = args as Record<string, unknown>;
+    const params = args as Record<string, unknown>;
       let result: CanvasObject;
       
       if (params.id) {
-        const { id, ...updates } = params;
+        const { id, ...updates } = params as Record<string, unknown>;
         result = modifyObject(id as string, updates as Partial<CanvasObject>);
       } else {
-        result = addPolygon(params as unknown as PolygonParams);
+        const polygonParams = params as Record<string, unknown>;
+        result = addPolygon(polygonParams as unknown as PolygonParams);
       }
       
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result)
+          text: JSON.stringify(formatNumericValue(result))
         }]
       };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
   }, [addPolygon, modifyObject]);
 
   handlersRef.current.handleDelete = useCallback(async (args: unknown): Promise<ToolResponse> => {
-    try {
-      const { id } = args as { id: string };
-      deleteObject(id);
-      
-      return {
-        content: [{
-          type: 'text',
-          text: `Deleted object with ID: ${id}`
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
+    const { id } = args as { id: string };
+    deleteObject(id);
+    
+    return {
+      content: [{
+        type: 'text',
+        text: `Deleted object with ID: ${id}`
+      }]
+    };
   }, [deleteObject]);
 
   handlersRef.current.handleReorder = useCallback(async (args: unknown): Promise<ToolResponse> => {
-    try {
-      const { id, operation } = args as { id: string; operation: 'up' | 'down' | 'top' | 'bottom' };
-      reorderObject(id, operation);
-      
-      return {
-        content: [{
-          type: 'text',
-          text: `Reordered object ${id} - moved ${operation}`
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
+    const { id, operation, referenceId } = args as { 
+      id: string; 
+      operation: 'up' | 'down' | 'top' | 'bottom' | 'above' | 'below';
+      referenceId?: string;
+    };
+    reorderObject(id, operation, referenceId);
+    
+    const operationText = referenceId 
+      ? `moved ${operation} object ${referenceId}`
+      : `moved ${operation}`;
+    
+    return {
+      content: [{
+        type: 'text',
+        text: `Reordered object ${id} - ${operationText}`
+      }]
+    };
   }, [reorderObject]);
 
   handlersRef.current.handleClear = useCallback(async (): Promise<ToolResponse> => {
-    try {
-      clearCanvas();
-      
-      return {
-        content: [{
-          type: 'text',
-          text: 'Canvas cleared'
-        }]
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
+    clearCanvas();
+    
+    return {
+      content: [{
+        type: 'text',
+        text: 'Canvas cleared'
+      }]
+    };
   }, [clearCanvas]);
 
   handlersRef.current.handleGetStatus = useCallback(async (): Promise<ToolResponse> => {
-    try {
-      const status = getCanvasStatus();
-      const base64Image = getCanvasImage();
-      
-      return {
-        content: [
-          {
-            type: 'image',
-            data: base64Image,
-            mimeType: 'image/png'
-          },
-          {
-            type: 'text',
-            text: JSON.stringify(status, null, 2)
-          }
-        ]
-      };
-    } catch (error) {
-      return {
-        content: [{
+    const status = getCanvasStatus();
+    const base64Image = getCanvasImage();
+    
+    return {
+      content: [
+        {
+          type: 'image',
+          data: base64Image,
+          mimeType: 'image/png'
+        },
+        {
           type: 'text',
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }]
-      };
-    }
+          text: JSON.stringify(formatNumericValue(status), null, 2)
+        }
+      ]
+    };
   }, [getCanvasStatus, getCanvasImage]);
 
   useEffect(() => {
@@ -441,15 +390,19 @@ export const useSnappjack = ({
       },
       {
         name: 'drawit.reorderObject',
-        description: 'Change drawing order of an object',
+        description: 'Change drawing order of an object - use above/below for precise layering relative to other objects',
         inputSchema: {
           type: 'object',
           properties: {
-            id: { type: 'string', description: 'Object ID' },
+            id: { type: 'string', description: 'Object ID to reorder' },
             operation: { 
               type: 'string', 
-              enum: ['up', 'down', 'top', 'bottom'],
-              description: 'Move up/down/top/bottom in stack' 
+              enum: ['up', 'down', 'top', 'bottom', 'above', 'below'],
+              description: 'up/down (1 step), top/bottom (extremes), above/below (relative to referenceId)' 
+            },
+            referenceId: { 
+              type: 'string', 
+              description: 'Required for above/below operations - ID of object to position relative to' 
             }
           },
           required: ['id', 'operation']
@@ -468,7 +421,7 @@ export const useSnappjack = ({
       },
       {
         name: 'drawit.getStatus',
-        description: 'Get canvas status and all objects',
+        description: 'Get canvas status, all objects, and a visual screenshot of the current drawing',
         inputSchema: {
           type: 'object',
           properties: {},
