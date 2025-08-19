@@ -13,6 +13,7 @@ import AvailableTools from '@/components/AvailableTools';
 export default function DrawItPage() {
   const {
     drawingState,
+    canvasRef,
     getSystemInfo,
     addRectangle,
     addCircle,
@@ -25,6 +26,7 @@ export default function DrawItPage() {
     selectObject,
     moveObject,
     getCanvasStatus,
+    getCanvasImage,
     setCreationMode,
     startCreation,
     updateCreation,
@@ -56,7 +58,8 @@ export default function DrawItPage() {
     deleteObject,
     reorderObject,
     clearCanvas,
-    getCanvasStatus
+    getCanvasStatus,
+    getCanvasImage
   });
 
   const handleCanvasClick = () => {
@@ -115,6 +118,7 @@ export default function DrawItPage() {
               
               <div className="flex justify-center">
                 <Canvas
+                  ref={canvasRef}
                   objects={drawingState.objects}
                   selectedObject={drawingState.selectedObject}
                   width={CANVAS_WIDTH}

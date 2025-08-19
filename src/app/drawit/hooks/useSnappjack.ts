@@ -62,6 +62,7 @@ interface SnappjackHookProps {
   reorderObject: (id: string, operation: 'up' | 'down' | 'top' | 'bottom') => void;
   clearCanvas: () => void;
   getCanvasStatus: () => CanvasStatus;
+  getCanvasImage: () => string;
 }
 
 export const useSnappjack = ({ 
@@ -74,7 +75,8 @@ export const useSnappjack = ({
   deleteObject,
   reorderObject,
   clearCanvas,
-  getCanvasStatus
+  getCanvasStatus,
+  getCanvasImage
 }: SnappjackHookProps) => {
   const [status, setStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -298,12 +300,20 @@ export const useSnappjack = ({
   handlersRef.current.handleGetStatus = useCallback(async (): Promise<ToolResponse> => {
     try {
       const status = getCanvasStatus();
+      const base64Image = getCanvasImage();
       
       return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify(status, null, 2)
-        }]
+        content: [
+          {
+            type: 'image',
+            data: base64Image,
+            mimeType: 'image/png'
+          },
+          {
+            type: 'text',
+            text: JSON.stringify(status, null, 2)
+          }
+        ]
       };
     } catch (error) {
       return {
@@ -313,7 +323,7 @@ export const useSnappjack = ({
         }]
       };
     }
-  }, [getCanvasStatus]);
+  }, [getCanvasStatus, getCanvasImage]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

@@ -11,6 +11,7 @@ import {
   CreationMode,
   HandleType 
 } from '@/types/drawit';
+import { CanvasHandle } from '../components/Canvas';
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 800;
@@ -30,7 +31,7 @@ export const useDrawit = () => {
   const [defaultStrokeColor, setDefaultStrokeColor] = useState('#4B5563'); // Dark gray
   const [defaultFillColor, setDefaultFillColor] = useState('#7895A1'); // Slate blue
   
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<CanvasHandle>(null);
   const drawingStateRef = useRef(drawingState);
   
   useEffect(() => {
@@ -531,6 +532,15 @@ export const useDrawit = () => {
     };
   }, []);
 
+  const getCanvasImage = useCallback((): string => {
+    if (!canvasRef.current) {
+      throw new Error('Canvas not available');
+    }
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+    const base64Data = dataUrl.split(',')[1];
+    return base64Data;
+  }, []);
+
   const setCreationMode = useCallback((mode: CreationMode) => {
     setDrawingState(prev => ({
       ...prev,
@@ -971,6 +981,7 @@ export const useDrawit = () => {
     selectObject,
     moveObject,
     getCanvasStatus,
+    getCanvasImage,
     setCreationMode,
     startCreation,
     updateCreation,

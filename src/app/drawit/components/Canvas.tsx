@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject, CreationMode, HandleInteraction } from '@/types/drawit';
 
 interface CanvasProps {
@@ -26,7 +26,11 @@ interface CanvasProps {
   onEndHandleInteraction: () => void;
 }
 
-export default function Canvas({
+export interface CanvasHandle {
+  toDataURL: (type?: string, quality?: number) => string;
+}
+
+const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   objects,
   selectedObject,
   width,
@@ -47,7 +51,7 @@ export default function Canvas({
   onRotateObject,
   onStartHandleInteraction,
   onEndHandleInteraction
-}: CanvasProps) {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDraggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -55,6 +59,15 @@ export default function Canvas({
   const [showTextInput, setShowTextInput] = useState(false);
   const [textInputPos, setTextInputPos] = useState<{ x: number; y: number } | null>(null);
   const [textInputValue, setTextInputValue] = useState('');
+
+  useImperativeHandle(ref, () => ({
+    toDataURL: (type?: string, quality?: number) => {
+      if (!canvasRef.current) {
+        throw new Error('Canvas not available');
+      }
+      return canvasRef.current.toDataURL(type, quality);
+    }
+  }), []);
 
   const percentToPixelX = useCallback((percent: number): number => (percent / 100) * width, [width]);
   const percentToPixelY = useCallback((percent: number): number => (percent / 100) * height, [height]);
@@ -647,4 +660,8 @@ export default function Canvas({
       )}
     </div>
   );
-}
+});
+
+Canvas.displayName = 'Canvas';
+
+export default Canvas;
