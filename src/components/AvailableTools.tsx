@@ -1,7 +1,6 @@
 'use client';
 
-import { Tool } from '@/lib/snappjack-client';
-// import { Tool } from '@snappjack/sdk-js';
+import { Tool } from '@snappjack/sdk-js';
 
 interface AvailableToolsProps {
   tools: Tool[];

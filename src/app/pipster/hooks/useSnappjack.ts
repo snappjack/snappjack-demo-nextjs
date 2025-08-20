@@ -3,15 +3,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
 import { GameState, DiceState } from '@/types/dice';
 
-const appId = process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID;
-const apiKey = process.env.NEXT_PUBLIC_SNAPPJACK_API_KEY;
-const serverUrl = process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL;
-
-// appId and apiKey must be defined,but serverUrl is optional
-if (!appId || !apiKey) {
-  throw new Error('Missing required environment variables');
-}
-
 interface SnappjackHookProps {
   getCurrentDiceState: () => DiceState;
   setDicePlan: (actions: string[]) => DiceState;
@@ -181,9 +172,9 @@ Important Rules:
 
     const snappjack = new Snappjack({
       userId: 'demo-user',
-      appId,
-      apiKey,
-      serverUrl,
+      appId: process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!, // This will be inlined by Next.js
+      serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL, // This will also be inlined by Next.js
+      snappjackTokenEndpoint: '/api/snappjack/token',
       tools: tools,
       autoReconnect: true
     });

@@ -2,14 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
 import { CanvasStatus, CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/types/drawit';
 
-const appId = process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID;
-const apiKey = process.env.NEXT_PUBLIC_SNAPPJACK_API_KEY;
-const serverUrl = process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL;
-
-if (!appId || !apiKey) {
-  throw new Error('Missing required environment variables');
-}
-
 interface RectangleParams {
   x?: number;
   y?: number;
@@ -546,9 +538,9 @@ export const useSnappjack = ({
 
     const snappjack = new Snappjack({
       userId: 'demo-user',
-      appId,
-      apiKey,
-      serverUrl,
+      appId: process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!, // This will be inlined by Next.js
+      serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL, // This will also be inlined by Next.js
+      snappjackTokenEndpoint: '/api/snappjack/token',
       tools: tools,
       autoReconnect: true
     });
