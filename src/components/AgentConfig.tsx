@@ -18,8 +18,10 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
     }
   };
 
+  const name = "snappjack-demo";
+
   const mcpConfig = {
-    "pipster": {
+    [name]: {
       type: 'http',
       url: connectionData.mcpEndpoint,
       headers: { Authorization: `Bearer ${connectionData.userApiKey}` }
@@ -27,7 +29,7 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
   };
 
   const configJson = JSON.stringify(mcpConfig, null, 2);
-  const cliCommand = `claude mcp add --transport http pipster ${connectionData.mcpEndpoint} \\
+  const cliCommand = `claude mcp add --transport http ${name} ${connectionData.mcpEndpoint} \\
   --header "Authorization: Bearer ${connectionData.userApiKey}"`;
 
   return (

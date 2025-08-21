@@ -47,7 +47,7 @@ export default function DrawItPage() {
     CANVAS_HEIGHT
   } = useDrawit();
 
-  const { status, connectionData, availableTools } = useSnappjack({
+  const { status, connectionData, availableTools, connectionError, resetCredentials } = useSnappjack({
     addRectangle,
     addCircle,
     addText,
@@ -169,6 +169,38 @@ export default function DrawItPage() {
 
         {/* Full Width Bottom Section */}
         <div className="space-y-5 mt-5">
+          {/* Connection Error */}
+          {connectionError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <div className="text-red-500 text-xl">⚠️</div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-800 mb-1">Connection Problem</h3>
+                  <p className="text-red-700 mb-3">{connectionError.message}</p>
+                  {connectionError.canResetCredentials ? (
+                    <div className="space-y-2">
+                      <p className="text-red-600 text-sm">
+                        Your credentials may be invalid. Try getting new credentials:
+                      </p>
+                      <button
+                        onClick={resetCredentials}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+                      >
+                        Get New Credentials
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-red-600 text-sm">
+                      {connectionError.type === 'server_unreachable' 
+                        ? 'The server may be down. Please wait and the app will retry automatically.' 
+                        : 'Please check your connection and try refreshing the page.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Connection Status */}
           <ConnectionStatus status={status} appName="DrawIt" appEmoji="🎨" />
 

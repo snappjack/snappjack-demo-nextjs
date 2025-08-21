@@ -8,7 +8,7 @@ export default function ConnectionStatus({ status, appName = 'Pipster', appEmoji
     if (line === 'agent') {
       return status === 'bridged' ? 'bg-green-500' : status === 'connected' ? 'bg-red-500' : 'bg-gray-300';
     } else {
-      return status !== 'disconnected' ? 'bg-green-500' : 'bg-red-500';
+      return status === 'connected' || status === 'bridged' ? 'bg-green-500' : 'bg-red-500';
     }
   };
 

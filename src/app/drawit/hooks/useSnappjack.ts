@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
 import { CanvasStatus, CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/types/drawit';
+import { useSnappjackCredentials } from '@/contexts/SnappjackCredentialsContext';
 
 interface RectangleParams {
   x?: number;
@@ -203,6 +204,22 @@ export const useSnappjack = ({
   const [status, setStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  const [connectionError, setConnectionError] = useState<{type: string; message: string; canResetCredentials: boolean} | null>(null);
+  const snappjackRef = useRef<Snappjack | null>(null);
+  
+  // Use shared credentials from context
+  const { credentials, resetCredentials: resetSharedCredentials } = useSnappjackCredentials();
+
+  // Function to reset credentials and create new user
+  const resetCredentials = useCallback(async () => {
+    // Reset SDK credentials if it exists
+    if (snappjackRef.current) {
+      snappjackRef.current.resetCredentials();
+    }
+    
+    setConnectionError(null);
+    await resetSharedCredentials();
+  }, [resetSharedCredentials]);
 
   const handlersRef = useRef<{
     handleSystemInfo: ToolHandler;
@@ -379,8 +396,9 @@ export const useSnappjack = ({
     };
   }, [getCanvasStatus, getCanvasImage]);
 
+  // Initialize Snappjack when credentials are available
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !credentials) return;
 
     const tools: Tool[] = [
       {
@@ -537,18 +555,24 @@ export const useSnappjack = ({
     ];
 
     const snappjack = new Snappjack({
-      userId: 'demo-user',
-      appId: process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!, // This will be inlined by Next.js
-      serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL, // This will also be inlined by Next.js
-      snappjackTokenEndpoint: '/api/snappjack/token',
+      userId: credentials.userId,
+      userApiKey: credentials.userApiKey,
+      appId: process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!,
+      serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL,
       tools: tools,
       autoReconnect: true
     });
+    
+    snappjackRef.current = snappjack;
 
     setAvailableTools(tools);
 
     snappjack.on('status', (newStatus: SnappjackStatus) => {
       setStatus(newStatus);
+      // Clear connection error when status changes to connected/bridged
+      if (newStatus === 'connected' || newStatus === 'bridged') {
+        setConnectionError(null);
+      }
     });
 
     snappjack.on('user-api-key-generated', (data: ConnectionData) => {
@@ -556,19 +580,36 @@ export const useSnappjack = ({
       console.log('DrawIt app connected via Snappjack!');
     });
 
+    // Handle connection errors
+    snappjack.on('connection-error', (error: {type: string; message: string; canResetCredentials: boolean}) => {
+      console.error('Connection error:', error);
+      setConnectionError({
+        type: error.type,
+        message: error.message,
+        canResetCredentials: error.canResetCredentials
+      });
+    });
+
     snappjack.connect().catch((error: Error) => {
       console.error('Connection failed:', error);
+      setConnectionError({
+        type: 'connection_failed',
+        message: error.message,
+        canResetCredentials: false
+      });
     });
 
     return () => {
       snappjack.removeAllListeners();
       snappjack.disconnect();
     };
-  }, []);
+  }, [credentials, addRectangle, addCircle, addText, addPolygon, modifyObject, deleteObject, reorderObject, clearCanvas, getCanvasStatus, getCanvasImage]);
 
   return {
     status,
     connectionData,
-    availableTools
+    availableTools,
+    connectionError,
+    resetCredentials
   };
 };

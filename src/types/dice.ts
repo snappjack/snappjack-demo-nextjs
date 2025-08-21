@@ -32,7 +32,7 @@ export interface GameStatusProps {
 }
 
 export interface ConnectionStatusProps {
-  status: 'disconnected' | 'connected' | 'bridged';
+  status: 'disconnected' | 'connected' | 'bridged' | 'error';
   appName?: string;
   appEmoji?: string;
 }
