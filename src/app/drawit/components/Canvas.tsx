@@ -485,7 +485,6 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
     // Draw rotation handle - use object's actual center for consistency
     const objCenterX = percentToPixelX(obj.x);
-    const objCenterY = percentToPixelY(obj.y);
     const rotationHandleY = y - 30; // Match the increased distance
     ctx.beginPath();
     ctx.arc(objCenterX, rotationHandleY, 8, 0, 2 * Math.PI); // Larger handle

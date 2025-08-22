@@ -130,8 +130,8 @@ export default function Home() {
               </div>
               <h3 className="font-bold text-lg mb-2">2. Connect an AI Agent</h3>
               <p className="text-gray-600">
-                Use an MCP-enabled AI like Claude Desktop. Copy the connection details from the Snapp's 
-                "Agent Configuration" section and add them to your AI's MCP settings.
+                Use an MCP-enabled AI like Claude Desktop. Copy the connection details from the Snapp&apos;s 
+                &quot;Agent Configuration&quot; section and add them to your AI&apos;s MCP settings.
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export default function Home() {
               </div>
               <h3 className="font-bold text-lg mb-2">3. Collaborate with AI</h3>
               <p className="text-gray-600">
-                Ask the AI to interact with your Snapp. "Draw a house", "Roll until we get all sixes", 
+                Ask the AI to interact with your Snapp. &quot;Draw a house&quot;, &quot;Roll until we get all sixes&quot;, 
                 or any task the Snapp supports. The AI works alongside you in real-time.
               </p>
             </div>
