@@ -73,8 +73,8 @@ export default function DrawItPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto p-5">
+    <div className="bg-gray-100 py-8">
+      <div className="max-w-7xl mx-auto px-5">
         {/* Header */}
         <div className="bg-white p-8 rounded-lg shadow-md mb-5">
           <div className="flex justify-center mb-4">
@@ -209,13 +209,6 @@ export default function DrawItPage() {
 
           {/* Agent Configuration */}
           <AgentConfig connectionData={connectionData} />
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8 pt-5 border-t border-gray-200">
-          <a href="https://www.snappjack.com" target="_blank" rel="noopener" className="text-blue-500 hover:underline font-medium text-lg">
-            🔗 Learn more about Snappjack
-          </a>
         </div>
       </div>
     </div>
