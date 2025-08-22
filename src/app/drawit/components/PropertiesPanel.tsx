@@ -1,6 +1,6 @@
 'use client';
 
-import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/types/drawit';
+import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/app/drawit/types/drawit';
 import { CONSTRAINTS } from '../hooks/useDrawit';
 
 interface PropertiesPanelProps {

@@ -1,6 +1,6 @@
 'use client';
 
-import { GameStatusProps } from '@/types/dice';
+import { GameStatusProps } from '@/app/pipster/types/pipster';
 
 export default function KeepDieStatus({ diceValues, keptDice }: GameStatusProps) {
   const keptCount = keptDice.filter(kept => kept).length;

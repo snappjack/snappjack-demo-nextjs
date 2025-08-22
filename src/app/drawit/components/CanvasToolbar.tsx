@@ -1,6 +1,6 @@
 'use client';
 
-import { CreationMode } from '@/types/drawit';
+import { CreationMode } from '@/app/drawit/types/drawit';
 
 interface CanvasToolbarProps {
   currentMode: CreationMode;

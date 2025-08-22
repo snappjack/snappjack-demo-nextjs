@@ -10,7 +10,7 @@ import {
   BoundingBox,
   CreationMode,
   HandleType 
-} from '@/types/drawit';
+} from '@/app/drawit/types/drawit';
 import { CanvasHandle } from '../components/Canvas';
 
 const CANVAS_WIDTH = 800;

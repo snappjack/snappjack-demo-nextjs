@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
-import { GameState, DiceState } from '@/types/dice';
+import { GameState, DiceState } from '@/app/pipster/types/pipster';
 import { useSnappjackCredentials } from '@/contexts/SnappjackCredentialsContext';
 
 interface SnappjackHookProps {

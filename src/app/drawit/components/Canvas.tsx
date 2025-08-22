@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject, CreationMode, HandleInteraction } from '@/types/drawit';
+import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject, CreationMode, HandleInteraction } from '@/app/drawit/types/drawit';
 
 interface CanvasProps {
   objects: CanvasObject[];

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { ConnectionStatusProps } from '@/types/dice';
+import { ConnectionStatusProps } from '@/app/pipster/types/pipster';
 
 export default function ConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲' }: ConnectionStatusProps) {
   const getLineColor = (line: 'agent' | 'app') => {

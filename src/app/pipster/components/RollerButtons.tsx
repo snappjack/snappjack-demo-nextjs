@@ -1,6 +1,6 @@
 'use client';
 
-import { RollerButtonsProps } from '@/types/dice';
+import { RollerButtonsProps } from '@/app/pipster/types/pipster';
 
 export default function RollerButtons({
   onRoll,

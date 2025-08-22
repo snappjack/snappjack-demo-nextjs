@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AgentConfigProps } from '@/types/dice';
+import { AgentConfigProps } from '@/app/pipster/types/pipster';
 
 export default function AgentConfig({ connectionData }: AgentConfigProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);

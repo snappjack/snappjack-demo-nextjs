@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { GameState, DiceState } from '@/types/dice';
+import { GameState, DiceState } from '@/app/pipster/types/pipster';
 
 export const usePipster = () => {
   const [gameState, setGameState] = useState<GameState>({

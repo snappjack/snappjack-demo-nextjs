@@ -1,6 +1,6 @@
 'use client';
 
-import { DieProps } from '@/types/dice';
+import { DieProps } from '@/app/pipster/types/pipster';
 
 export default function Die({ value, isKept, isRolling, index, onClick }: DieProps) {
   const handleClick = () => {
