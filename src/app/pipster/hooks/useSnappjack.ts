@@ -8,13 +8,15 @@ interface SnappjackHookProps {
   setDicePlan: (actions: string[]) => DiceState;
   performRoll: () => Promise<(number | null)[]>;
   resetGame: () => GameState;
+  appName: string;
 }
 
 export const useSnappjack = ({ 
   getCurrentDiceState, 
   setDicePlan, 
   performRoll, 
-  resetGame 
+  resetGame,
+  appName
 }: SnappjackHookProps) => {
   const [status, setStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -53,7 +55,7 @@ export const useSnappjack = ({
   handlersRef.current.handleAgentSystemInfoGet = useCallback(async (): Promise<ToolResponse> => {
     const currentState = getCurrentDiceState();
     
-    const systemDoc = `PIPSTER DICE SYSTEM
+    const systemDoc = `${appName.toUpperCase()} DICE SYSTEM
 
 System Overview:
 This system manages 5 dice (indexed 0-4). Each die can be individually controlled for keeping or rolling.
@@ -64,14 +66,14 @@ Current State Structure:
 - nextAction: Planned action per die ("keep" or "roll")
 
 Operating Instructions:
-1. Check current state using this tool (pipster.systemInfo.get)
-2. To change which dice to keep/roll: call pipster.dice.plan with array of 5 actions
+1. Check current state using this tool (${appName.toLowerCase()}_systemInfo_get)
+2. To change which dice to keep/roll: call ${appName.toLowerCase()}_dice_plan with array of 5 actions
    - Only call plan if you want to CHANGE the current nextAction state
    - Example: ["keep", "keep", "roll", "roll", "roll"] keeps first two dice
-3. To execute a roll: call pipster.dice.roll
+3. To execute a roll: call ${appName.toLowerCase()}_dice_roll
    - This rolls all dice marked as "roll" in nextAction
    - Kept dice retain their values
-4. To start fresh: call pipster.dice.reset (sets all values to null)
+4. To start fresh: call ${appName.toLowerCase()}_dice_reset (sets all values to null)
 
 Important Rules:
 - Dice with null values MUST have nextAction set to "roll"
@@ -138,7 +140,7 @@ Important Rules:
 
     const tools: Tool[] = [
       {
-        name: 'pipster.systemInfo.get',
+        name: `${appName.toLowerCase()}_systemInfo_get`,
         description: 'MUST call this exactly once before calling other tools to get system documentation and current state.',
         inputSchema: {
           type: 'object',
@@ -148,7 +150,7 @@ Important Rules:
         handler: (args, msg) => handlersRef.current.handleAgentSystemInfoGet(args, msg)
       },
       {
-        name: 'pipster.dice.plan',
+        name: `${appName.toLowerCase()}_dice_plan`,
         description: 'Set the plan for each die. Pass array of 5 actions ("keep" or "roll").',
         inputSchema: {
           type: 'object',
@@ -166,7 +168,7 @@ Important Rules:
         handler: (args, msg) => handlersRef.current.handleAgentDicePlan(args, msg)
       },
       {
-        name: 'pipster.dice.reset',
+        name: `${appName.toLowerCase()}_dice_reset`,
         description: 'Reset all dice. Clears values and sets all dice to roll.',
         inputSchema: {
           type: 'object',
@@ -176,7 +178,7 @@ Important Rules:
         handler: (args, msg) => handlersRef.current.handleAgentDiceReset(args, msg)
       },
       {
-        name: 'pipster.dice.roll',
+        name: `${appName.toLowerCase()}_dice_roll`,
         description: 'Roll all dice not marked as "keep".',
         inputSchema: {
           type: 'object',
@@ -210,7 +212,7 @@ Important Rules:
 
     snappjack.on('user-api-key-generated', (data: ConnectionData) => {
       setConnectionData(data);
-      console.log('Pipster demo app connected via Snappjack!');
+      console.log(`${appName} demo app connected via Snappjack!`);
     });
 
     // Handle connection errors

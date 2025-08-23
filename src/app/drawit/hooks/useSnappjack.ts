@@ -55,6 +55,7 @@ interface SnappjackHookProps {
   clearCanvas: () => void;
   getCanvasStatus: () => CanvasStatus;
   getCanvasImage: () => string;
+  appName: string;
 }
 
 // Helper function to format numeric values with limited precision
@@ -79,10 +80,10 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 800;
 
 // AI agent system information - provides comprehensive documentation for the drawing system
-const getSystemInfo = (objectCount: number): string => {
+const getSystem = (objectCount: number, appName: string): string => {
   const currentTime = new Date().toLocaleString();
   
-  const docs = `# DrawIt Canvas System
+  const docs = `# ${appName} Canvas System
 
 **System Status**: Active at ${currentTime}
 **Current Objects**: ${objectCount} objects on canvas
@@ -102,77 +103,66 @@ const getSystemInfo = (objectCount: number): string => {
 - **Polygons**: defined by array of vertices (x,y coordinates as %), automatically closed, 3-50 vertices
 - **Rotation**: All objects can rotate around their center point (-360° to 360°)
 
-## Object Management
-- **Object Names**: Every object has a unique \`name\` property (defaults to type_id like "rectangle_abc123")
-- **Renaming Objects**: Use any object tool with \`id\` and \`name\` parameters to rename (e.g., \`rectangle(id: "abc123", name: "Sky")\`)
-- **Unified Tools**: Each object type has one tool that creates (no ID) or modifies (with ID)
-- **Type Safety**: Tools are object-specific - use \`rectangle\` for rectangles, \`circle\` for circles, etc.
-- **Deletion**: Remove objects by ID using \`deleteObject\`
-- **Status Check**: Use \`getStatus\` to see complete object list with all properties including names
-- **Reordering**: Move objects up/down in drawing stack or to front/back with \`reorderObject\`
-- **Bounding boxes**: Automatic calculation and tracking in percentage coordinates
-- **Validation**: All parameters automatically validated and clamped to safe ranges
+## Object Naming
+- **Object Names**: Every object has unique id and an optional \`name\` property for better understandability
+- **Naming Best Practice**: Always provide short, descriptive names when inserting objects (e.g., "tree-trunk", "branch-1", "branch-2", "leaves", "sky", "ground")
+- **Renaming Objects**: Use any object tool with \`id\` and \`name\` parameters to rename (e.g., \`${appName.toLowerCase()}_rectangle_upsert(id: "abc123", name: "sky")\`)
 
 ## Drawing Order and Layering
 - **Order Rule**: Objects are drawn from beginning to end of the objects array
 - **Layering**: Objects drawn later appear **in front of** objects drawn earlier
 - **Array Position**: First object in array = bottom layer, last object = top layer
 - **Overlap Behavior**: When objects overlap, later objects visually cover earlier objects
-- **Reordering Tools**: Use \`reorderObject\` to change layer positions:
+- **Reordering Tools**: Use \`${appName.toLowerCase()}_object_reorder\` to change layer positions:
   - \`"up"\` - moves object one position forward (more visible)
   - \`"down"\` - moves object one position backward (less visible)  
   - \`"top"\` - moves object to front (most visible)
   - \`"bottom"\` - moves object to back (least visible)
   - \`"above"\` + referenceId - places object in front of specified object
   - \`"below"\` + referenceId - places object behind specified object
-- **Strategy**: Create background elements first, then add foreground details on top
+- **Strategy**: Insert background elements first, then add foreground details on top
 - **Precise Positioning**: Use \`above\`/\`below\` for exact layering relative to other objects
 
 ## Available Tools
-- **Object Tools**: \`rectangle\`, \`circle\`, \`text\`, \`polygon\` (create new without ID, modify existing with ID)
-- **Management**: \`reorderObject\`, \`deleteObject\`
-- **Status**: \`getStatus\` - returns complete object list, canvas info, and visual screenshot
-- **Utility**: \`clearCanvas\`
-- **Info**: \`systemInfo.get\` - returns this documentation
+- **Object Tools**: \`${appName.toLowerCase()}_rectangle_upsert\`, \`${appName.toLowerCase()}_circle_upsert\`, \`${appName.toLowerCase()}_text_upsert\`, \`${appName.toLowerCase()}_polygon_upsert\` (insert new without ID, update existing with ID)
+- **Management**: \`${appName.toLowerCase()}_object_reorder\`, \`${appName.toLowerCase()}_object_delete\`
+- **Status**: \`${appName.toLowerCase()}_canvas_status\` - returns complete object list, canvas info, and visual screenshot
+- **Utility**: \`${appName.toLowerCase()}_canvas_clear\`
+- **Info**: \`${appName.toLowerCase()}_system_get\` - returns this documentation
 
-## Interactive Canvas Features
-- **Object Selection**: Click on any object to select it (shows blue highlight)
-- **Object Movement**: Drag selected objects to move them around the canvas
-- **Visual Feedback**: Selected objects are highlighted with a blue dashed outline
-
-## Usage Examples
-- **Create rectangle**: \`rectangle(x: 50, y: 50, width: 20, height: 10, color: "blue")\`
-- **Rename object**: \`rectangle(id: "abc123", name: "Sky Background")\`
-- **Modify rectangle**: \`rectangle(id: "abc123", color: "red", width: 30)\`
-- **Create circle**: \`circle(x: 25, y: 75, radius: 15, color: "green")\`
-- **Rename and modify**: \`circle(id: "xyz789", name: "Sun", color: "yellow", fillColor: "orange")\`
-- **Modify text**: \`text(id: "xyz789", fontSize: 8, color: "purple")\`
-- **Create triangle**: \`polygon(vertices: [{x: 50, y: 20}, {x: 30, y: 60}, {x: 70, y: 60}], color: "red")\`
-- **Create diamond**: \`polygon(vertices: [{x: 50, y: 10}, {x: 80, y: 50}, {x: 50, y: 90}, {x: 20, y: 50}], color: "blue", fillColor: "lightblue")\`
-- **Rename polygon**: \`polygon(id: "def456", name: "Mountain", color: "orange", strokeWidth: 3)\`
-- **Check everything**: \`getStatus()\` - Get complete object list with all properties including names
+## Usage Examples  
+- **Insert rectangle**: \`${appName.toLowerCase()}_rectangle_upsert(x: 50, y: 50, width: 20, height: 10, color: "blue", name: "box")\`
+- **Rename object**: \`${appName.toLowerCase()}_rectangle_upsert(id: "abc123", name: "sky-bg")\`
+- **Update rectangle**: \`${appName.toLowerCase()}_rectangle_upsert(id: "abc123", color: "red", width: 30)\`
+- **Insert circle**: \`${appName.toLowerCase()}_circle_upsert(x: 25, y: 75, radius: 15, color: "green", name: "ball")\`
+- **Rename and update**: \`${appName.toLowerCase()}_circle_upsert(id: "xyz789", name: "sun", color: "yellow", fillColor: "orange")\`
+- **Update text**: \`${appName.toLowerCase()}_text_upsert(id: "xyz789", fontSize: 8, color: "purple")\`
+- **Insert triangle**: \`${appName.toLowerCase()}_polygon_upsert(vertices: [{x: 50, y: 20}, {x: 30, y: 60}, {x: 70, y: 60}], color: "red", name: "triangle")\`
+- **Insert diamond**: \`${appName.toLowerCase()}_polygon_upsert(vertices: [{x: 50, y: 10}, {x: 80, y: 50}, {x: 50, y: 90}, {x: 20, y: 50}], color: "blue", fillColor: "lightblue", name: "diamond")\`
+- **Rename polygon**: \`${appName.toLowerCase()}_polygon_upsert(id: "def456", name: "mountain-1", color: "orange", strokeWidth: 3)\`
+- **Check everything**: \`${appName.toLowerCase()}_canvas_status()\` - Get complete object list with all properties including names
 
 ## Layering Examples
-- **Background first**: \`rectangle(x: 50, y: 50, width: 80, height: 60, fillColor: "lightblue", name: "Sky")\` (drawn first = back layer)
-- **Add middle layer**: \`circle(x: 30, y: 70, radius: 20, fillColor: "brown", name: "Tree")\` (drawn second = middle layer)  
-- **Add foreground**: \`text(x: 50, y: 30, text: "My Scene", fontSize: 10, color: "white")\` (drawn last = front layer)
+- **Background first**: \`${appName.toLowerCase()}_rectangle_upsert(x: 50, y: 50, width: 80, height: 60, fillColor: "lightblue", name: "sky")\` (drawn first = back layer)
+- **Add middle layer**: \`${appName.toLowerCase()}_circle_upsert(x: 30, y: 70, radius: 20, fillColor: "brown", name: "tree-trunk")\` (drawn second = middle layer)  
+- **Add foreground**: \`${appName.toLowerCase()}_text_upsert(x: 50, y: 30, text: "My Scene", fontSize: 10, color: "white", name: "title")\` (drawn last = front layer)
 
 ### Simple Reordering:
-- **Bring to front**: \`reorderObject(id: "tree_id", operation: "top")\` - brings tree to front
-- **Send to back**: \`reorderObject(id: "text_id", operation: "bottom")\` - sends text behind everything
-- **Move up one**: \`reorderObject(id: "sky_id", operation: "up")\` - moves sky forward one layer
+- **Bring to front**: \`${appName.toLowerCase()}_object_reorder(id: "tree_trunk_id", operation: "top")\` - brings tree trunk to front
+- **Send to back**: \`${appName.toLowerCase()}_object_reorder(id: "text_id", operation: "bottom")\` - sends text behind everything
+- **Move up one**: \`${appName.toLowerCase()}_object_reorder(id: "sky_id", operation: "up")\` - moves sky forward one layer
 
 ### Precise Reordering:
-- **Above specific object**: \`reorderObject(id: "bird_id", operation: "above", referenceId: "tree_id")\` - puts bird in front of tree
-- **Below specific object**: \`reorderObject(id: "shadow_id", operation: "below", referenceId: "tree_id")\` - puts shadow behind tree
-- **Complex scene**: Create sun, then \`reorderObject(id: "sun_id", operation: "below", referenceId: "cloud_id")\` to put sun behind clouds
+- **Above specific object**: \`${appName.toLowerCase()}_object_reorder(id: "bird_id", operation: "above", referenceId: "branch_1_id")\` - puts bird in front of branch
+- **Below specific object**: \`${appName.toLowerCase()}_object_reorder(id: "shadow_id", operation: "below", referenceId: "tree_trunk_id")\` - puts shadow behind tree trunk
+- **Complex scene**: Insert sun, then \`${appName.toLowerCase()}_object_reorder(id: "sun_id", operation: "below", referenceId: "cloud_id")\` to put sun behind clouds
 
 ## Recommended Workflow
-1. **Check Status**: Use \`getStatus\` to see current objects and visual screenshot
-2. **Create/Modify**: Use object tools (\`rectangle\`, \`circle\`, \`text\`, \`polygon\`) to build your design
-3. **Fine-tune**: Modify specific objects by their ID to adjust properties
-4. **Reorder**: Use \`reorderObject\` to change drawing order if needed
-5. **Validate**: Use \`getStatus\` again to see the updated result with visual feedback
+1. **Check Status**: Use \`${appName.toLowerCase()}_canvas_status\` to see current objects and visual screenshot
+2. **Insert/Update**: Use object tools (\`${appName.toLowerCase()}_rectangle_upsert\`, \`${appName.toLowerCase()}_circle_upsert\`, \`${appName.toLowerCase()}_text_upsert\`, \`${appName.toLowerCase()}_polygon_upsert\`) to build your design
+3. **Check Status Again**: Use \`${appName.toLowerCase()}_canvas_status\` to see the updated result with visual feedback
+4. **Fine-tune**: Update specific objects by their ID or reorder objects as needed
+5. **Validate**: Use \`${appName.toLowerCase()}_canvas_status\` again to see the updated result with visual feedback
 
 ## Special Notes for Polygons
 - **Auto-closing**: Polygons automatically connect the last vertex back to the first
@@ -199,7 +189,8 @@ export const useSnappjack = ({
   reorderObject,
   clearCanvas,
   getCanvasStatus,
-  getCanvasImage
+  getCanvasImage,
+  appName
 }: SnappjackHookProps) => {
   const [status, setStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -222,7 +213,7 @@ export const useSnappjack = ({
   }, [resetSharedCredentials]);
 
   const handlersRef = useRef<{
-    handleSystemInfo: ToolHandler;
+    handleSystem: ToolHandler;
     handleRectangle: ToolHandler;
     handleCircle: ToolHandler;
     handleText: ToolHandler;
@@ -232,7 +223,7 @@ export const useSnappjack = ({
     handleClear: ToolHandler;
     handleGetStatus: ToolHandler;
   }>({
-    handleSystemInfo: async () => ({ content: [] }),
+    handleSystem: async () => ({ content: [] }),
     handleRectangle: async () => ({ content: [] }),
     handleCircle: async () => ({ content: [] }),
     handleText: async () => ({ content: [] }),
@@ -243,9 +234,9 @@ export const useSnappjack = ({
     handleGetStatus: async () => ({ content: [] }),
   });
 
-  handlersRef.current.handleSystemInfo = useCallback(async (): Promise<ToolResponse> => {
+  handlersRef.current.handleSystem = useCallback(async (): Promise<ToolResponse> => {
     const status = getCanvasStatus();
-    const info = getSystemInfo(status.objectCount);
+    const info = getSystem(status.objectCount, appName);
     return {
       content: [{
         type: 'text',
@@ -402,22 +393,23 @@ export const useSnappjack = ({
 
     const tools: Tool[] = [
       {
-        name: 'drawit.systemInfo.get',
+        name: `${appName.toLowerCase()}_system_get`,
         description: 'IMPORTANT: Call this first to understand the drawing system, coordinate system, and see usage examples. Returns comprehensive documentation and current canvas state.',
         inputSchema: {
           type: 'object',
           properties: {},
           required: []
         },
-        handler: (args, msg) => handlersRef.current.handleSystemInfo(args, msg)
+        handler: (args, msg) => handlersRef.current.handleSystem(args, msg)
       },
       {
-        name: 'drawit.rectangle',
-        description: 'Create a new rectangle (no ID) or modify existing (with ID)',
+        name: `${appName.toLowerCase()}_rectangle_upsert`,
+        description: 'Insert a new rectangle (no ID) or update existing (with ID)',
         inputSchema: {
           type: 'object',
           properties: {
-            id: { type: 'string', description: 'Object ID to modify (omit to create new)' },
+            id: { type: 'string', description: 'Object ID to update (omit to insert new)' },
+            name: { type: 'string', description: 'Descriptive name for the object' },
             x: { type: 'number', description: 'Center X (0-100%)' },
             y: { type: 'number', description: 'Center Y (0-100%)' },
             width: { type: 'number', description: 'Width (1-100%)' },
@@ -433,12 +425,13 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handleRectangle(args, msg)
       },
       {
-        name: 'drawit.circle',
-        description: 'Create a new circle (no ID) or modify existing (with ID)',
+        name: `${appName.toLowerCase()}_circle_upsert`,
+        description: 'Insert a new circle (no ID) or update existing (with ID)',
         inputSchema: {
           type: 'object',
           properties: {
-            id: { type: 'string', description: 'Object ID to modify (omit to create new)' },
+            id: { type: 'string', description: 'Object ID to update (omit to insert new)' },
+            name: { type: 'string', description: 'Descriptive name for the object' },
             x: { type: 'number', description: 'Center X (0-100%)' },
             y: { type: 'number', description: 'Center Y (0-100%)' },
             radius: { type: 'number', description: 'Radius (1-50%)' },
@@ -452,12 +445,13 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handleCircle(args, msg)
       },
       {
-        name: 'drawit.text',
-        description: 'Create new text (no ID) or modify existing (with ID)',
+        name: `${appName.toLowerCase()}_text_upsert`,
+        description: 'Insert new text (no ID) or update existing (with ID)',
         inputSchema: {
           type: 'object',
           properties: {
-            id: { type: 'string', description: 'Object ID to modify (omit to create new)' },
+            id: { type: 'string', description: 'Object ID to update (omit to insert new)' },
+            name: { type: 'string', description: 'Descriptive name for the object' },
             x: { type: 'number', description: 'Center X (0-100%)' },
             y: { type: 'number', description: 'Center Y (0-100%)' },
             text: { type: 'string', description: 'Text content' },
@@ -472,12 +466,13 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handleText(args, msg)
       },
       {
-        name: 'drawit.polygon',
-        description: 'Create new polygon (no ID) or modify existing (with ID)',
+        name: `${appName.toLowerCase()}_polygon_upsert`,
+        description: 'Insert new polygon (no ID) or update existing (with ID)',
         inputSchema: {
           type: 'object',
           properties: {
-            id: { type: 'string', description: 'Object ID to modify (omit to create new)' },
+            id: { type: 'string', description: 'Object ID to update (omit to insert new)' },
+            name: { type: 'string', description: 'Descriptive name for the object' },
             vertices: {
               type: 'array',
               description: 'Array of vertices (3-50 points)',
@@ -500,7 +495,7 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handlePolygon(args, msg)
       },
       {
-        name: 'drawit.deleteObject',
+        name: `${appName.toLowerCase()}_object_delete`,
         description: 'Delete an object by ID',
         inputSchema: {
           type: 'object',
@@ -512,7 +507,7 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handleDelete(args, msg)
       },
       {
-        name: 'drawit.reorderObject',
+        name: `${appName.toLowerCase()}_object_reorder`,
         description: 'Change drawing order of an object - use above/below for precise layering relative to other objects',
         inputSchema: {
           type: 'object',
@@ -533,7 +528,7 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handleReorder(args, msg)
       },
       {
-        name: 'drawit.clearCanvas',
+        name: `${appName.toLowerCase()}_canvas_clear`,
         description: 'Clear all objects from canvas',
         inputSchema: {
           type: 'object',
@@ -543,7 +538,7 @@ export const useSnappjack = ({
         handler: (args, msg) => handlersRef.current.handleClear(args, msg)
       },
       {
-        name: 'drawit.getStatus',
+        name: `${appName.toLowerCase()}_canvas_status`,
         description: 'Get canvas status, all objects, and a visual screenshot of the current drawing',
         inputSchema: {
           type: 'object',
@@ -577,7 +572,7 @@ export const useSnappjack = ({
 
     snappjack.on('user-api-key-generated', (data: ConnectionData) => {
       setConnectionData(data);
-      console.log('DrawIt app connected via Snappjack!');
+      console.log(`${appName} app connected via Snappjack!`);
     });
 
     // Handle connection errors

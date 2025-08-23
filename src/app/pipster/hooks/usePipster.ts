@@ -21,7 +21,7 @@ export const usePipster = () => {
       .filter((index): index is number => index !== null);
     
     if (indicesToRoll.length === 0) {
-      throw new Error('Cannot roll - all dice are kept! Use pipster.dice.plan to change at least one die to "roll".');
+      throw new Error(`Cannot roll - all dice are kept! Change at least one die to "roll".`);
     }
 
     return new Promise((resolve) => {

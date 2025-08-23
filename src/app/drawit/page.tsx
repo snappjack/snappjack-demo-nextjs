@@ -11,6 +11,9 @@ import AgentConfig from '@/components/AgentConfig';
 import AvailableTools from '@/components/AvailableTools';
 
 export default function DrawItPage() {
+  const APP_NAME = 'DrawIt';
+  const APP_EMOJI = '🎨';
+  
   const {
     drawingState,
     canvasRef,
@@ -45,7 +48,7 @@ export default function DrawItPage() {
     setDefaultFillColor,
     CANVAS_WIDTH,
     CANVAS_HEIGHT
-  } = useDrawit();
+  } = useDrawit(APP_NAME);
 
   const { status, connectionData, availableTools, connectionError, resetCredentials } = useSnappjack({
     addRectangle,
@@ -57,7 +60,8 @@ export default function DrawItPage() {
     reorderObject,
     clearCanvas,
     getCanvasStatus,
-    getCanvasImage
+    getCanvasImage,
+    appName: APP_NAME
   });
 
   const handleCanvasClick = () => {
@@ -83,7 +87,7 @@ export default function DrawItPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            🎨 DrawIt - Agentic Canvas
+            {APP_EMOJI} {APP_NAME} - Agentic Canvas
           </h1>
           <p className="text-center text-gray-600 max-w-2xl mx-auto leading-relaxed">
             A canvas drawing app demonstrating how AI agents can create and manipulate visual content through{' '}
@@ -202,13 +206,13 @@ export default function DrawItPage() {
           )}
 
           {/* Connection Status */}
-          <ConnectionStatus status={status} appName="DrawIt" appEmoji="🎨" />
+          <ConnectionStatus status={status} appName={APP_NAME} appEmoji={APP_EMOJI} />
 
           {/* Available Tools - only show when agent is connected */}
           {status === 'bridged' && <AvailableTools tools={availableTools} />}
 
           {/* Agent Configuration */}
-          <AgentConfig connectionData={connectionData} />
+          <AgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} />
         </div>
       </div>
     </div>

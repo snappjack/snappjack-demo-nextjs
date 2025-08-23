@@ -40,7 +40,7 @@ export const CONSTRAINTS = {
   }
 };
 
-export const useDrawit = () => {
+export const useDrawit = (appName: string) => {
   const [drawingState, setDrawingState] = useState<DrawingState>({
     objects: [],
     selectedObject: null,
@@ -919,7 +919,7 @@ export const useDrawit = () => {
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = `drawit-canvas-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `${appName.toLowerCase()}-canvas-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

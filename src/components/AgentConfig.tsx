@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AgentConfigProps } from '@/app/pipster/types/pipster';
 
-export default function AgentConfig({ connectionData }: AgentConfigProps) {
+export default function AgentConfig({ connectionData, appName }: AgentConfigProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   if (!connectionData) return null;
@@ -18,9 +18,10 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
     }
   };
 
-  const name = "snappjack-demo";
+  const name = appName || "snappjack-demo";
 
-  const mcpConfig = {
+  // Cursor configuration
+  const cursorConfig = {
     [name]: {
       type: 'http',
       url: connectionData.mcpEndpoint,
@@ -28,7 +29,24 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
     }
   };
 
-  const configJson = JSON.stringify(mcpConfig, null, 2);
+  // Claude Desktop configuration
+  const claudeDesktopConfig = {
+    [name]: {
+      command: "npx",
+      args: [
+        "mcp-remote",
+        connectionData.mcpEndpoint,
+        "--header",
+        "Authorization:${AUTH_TOKEN}"
+      ],
+      env: {
+        AUTH_TOKEN: `Bearer ${connectionData.userApiKey}`
+      }
+    }
+  };
+
+  const cursorConfigJson = JSON.stringify(cursorConfig, null, 2);
+  const claudeDesktopConfigJson = JSON.stringify(claudeDesktopConfig, null, 2);
   const cliCommand = `claude mcp add --transport http ${name} ${connectionData.mcpEndpoint} \\
   --header "Authorization: Bearer ${connectionData.userApiKey}"`;
 
@@ -79,25 +97,40 @@ export default function AgentConfig({ connectionData }: AgentConfigProps) {
         </div>
       </div>
 
-      {/* Method 2: JSON Configuration */}
+      {/* Method 2: JSON Configuration for Cursor */}
       <div className="mb-5 p-4 bg-white rounded-md border border-gray-200">
-        <h4 className="font-semibold text-gray-700 mb-3">Method 2: JSON Configuration</h4>
-        <p className="text-sm text-gray-600 mb-3">Add to your MCP settings file (Claude Desktop, Cursor, etc.):</p>
+        <h4 className="font-semibold text-gray-700 mb-3">Method 2: JSON Configuration for Cursor</h4>
+        <p className="text-sm text-gray-600 mb-3">Add to your Cursor MCP settings file:</p>
         <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
-          {configJson}
+          {cursorConfigJson}
         </pre>
         <button
-          onClick={() => copyToClipboard(configJson, 'json')}
+          onClick={() => copyToClipboard(cursorConfigJson, 'cursor-json')}
           className="mt-3 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded transition-colors"
         >
-          {copiedField === 'json' ? 'Copied!' : 'Copy JSON Configuration'}
+          {copiedField === 'cursor-json' ? 'Copied!' : 'Copy Cursor Configuration'}
         </button>
       </div>
 
-      {/* Method 3: Claude CLI */}
+      {/* Method 3: JSON Configuration for Claude Desktop */}
+      <div className="mb-5 p-4 bg-white rounded-md border border-gray-200">
+        <h4 className="font-semibold text-gray-700 mb-3">Method 3: JSON Configuration for Claude Desktop</h4>
+        <p className="text-sm text-gray-600 mb-3">Add to your Claude Desktop MCP settings file:</p>
+        <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
+          {claudeDesktopConfigJson}
+        </pre>
+        <button
+          onClick={() => copyToClipboard(claudeDesktopConfigJson, 'claude-json')}
+          className="mt-3 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded transition-colors"
+        >
+          {copiedField === 'claude-json' ? 'Copied!' : 'Copy Claude Desktop Configuration'}
+        </button>
+      </div>
+
+      {/* Method 4: Claude Code */}
       <div className="p-4 bg-white rounded-md border border-gray-200">
-        <h4 className="font-semibold text-gray-700 mb-3">Method 3: Claude CLI</h4>
-        <p className="text-sm text-gray-600 mb-3">For Claude CLI users, run this command:</p>
+        <h4 className="font-semibold text-gray-700 mb-3">Method 4: Claude Code</h4>
+        <p className="text-sm text-gray-600 mb-3">For Claude Code users, run this command:</p>
         <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
           {cliCommand}
         </pre>

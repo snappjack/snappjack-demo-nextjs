@@ -44,4 +44,5 @@ export interface AgentConfigProps {
     userId: string;
     mcpEndpoint: string;
   } | null;
+  appName?: string;
 }

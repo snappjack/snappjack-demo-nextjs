@@ -10,6 +10,9 @@ import AgentConfig from '@/components/AgentConfig';
 import AvailableTools from '@/components/AvailableTools';
 
 export default function DicePage() {
+  const APP_NAME = 'Pipster';
+  const APP_EMOJI = '🎲';
+  
   const {
     gameState,
     rollingIndices,
@@ -28,6 +31,7 @@ export default function DicePage() {
     setDicePlan,
     performRoll,
     resetGame,
+    appName: APP_NAME,
   });
 
   const isRollDisabled = gameState.keptDice.filter(kept => kept).length === 5;
@@ -43,7 +47,7 @@ export default function DicePage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            🎲 Pipster - Agentic Dice
+            {APP_EMOJI} {APP_NAME} - Agentic Dice
           </h1>
           <p className="text-center text-gray-600 max-w-2xl mx-auto leading-relaxed">
             A simple app demonstrating how web applications can provide both a traditional GUI for
@@ -107,13 +111,13 @@ export default function DicePage() {
         )}
 
         {/* Connection Status */}
-        <ConnectionStatus status={status} appName="Pipster" appEmoji="🎲" />
+        <ConnectionStatus status={status} appName={APP_NAME} appEmoji={APP_EMOJI} />
 
         {/* Available Tools - only show when agent is connected (bridged) */}
         {status === 'bridged' && <AvailableTools tools={availableTools} />}
 
         {/* Agent Configuration */}
-        <AgentConfig connectionData={connectionData} />
+        <AgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} />
       </div>
     </div>
   );
