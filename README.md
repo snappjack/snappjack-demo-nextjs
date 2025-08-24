@@ -32,8 +32,8 @@ cd snappjack-demo-nextjs
 npm install
 
 # Create .env file with your credentials
-echo "NEXT_PUBLIC_SNAPPJACK_APP_ID=your-app-id" > .env
-echo "SNAPPJACK_APP_API_KEY=your-api-key" >> .env
+echo "NEXT_PUBLIC_SNAPPJACK_SNAPP_ID=your-app-id" > .env
+echo "SNAPPJACK_SNAPP_API_KEY=your-api-key" >> .env
 
 # Run the development server
 npm run dev
@@ -181,7 +181,7 @@ export function useSnappjack({ getCurrentState, updateMessage }) {
   ];
 
   return useSnappjackSDK({
-    appId: 'my-hello-world',
+    snappId: 'my-hello-world',
     appName: 'Hello World App',
     tools
   });
@@ -280,8 +280,8 @@ npm run lint      # Run ESLint
 Create a `.env` file in the project root with the following:
 
 ```bash
-NEXT_PUBLIC_SNAPPJACK_APP_ID=your-app-id
-SNAPPJACK_APP_API_KEY=your-api-key
+NEXT_PUBLIC_SNAPPJACK_SNAPP_ID=your-app-id
+SNAPPJACK_SNAPP_API_KEY=your-api-key
 ```
 
 To get your App ID and API key:

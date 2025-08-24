@@ -552,7 +552,7 @@ export const useSnappjack = ({
     const snappjack = new Snappjack({
       userId: credentials.userId,
       userApiKey: credentials.userApiKey,
-      appId: process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!,
+      snappId: process.env.NEXT_PUBLIC_SNAPPJACK_SNAPP_ID!,
       serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL,
       tools: tools,
       autoReconnect: true

@@ -27,8 +27,8 @@ export const SnappjackCredentialsProvider: React.FC<SnappjackCredentialsProvider
   const [error, setError] = useState<{type: string; message: string; canResetCredentials: boolean} | null>(null);
 
   const resetCredentials = useCallback(async () => {
-    const appId = process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!;
-    const storageKey = `snappjack-credentials-${appId}`;
+    const snappId = process.env.NEXT_PUBLIC_SNAPPJACK_SNAPP_ID!;
+    const storageKey = `snappjack-credentials-${snappId}`;
     
     // Clear existing credentials
     localStorage.removeItem(storageKey);
@@ -62,8 +62,8 @@ export const SnappjackCredentialsProvider: React.FC<SnappjackCredentialsProvider
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const appId = process.env.NEXT_PUBLIC_SNAPPJACK_APP_ID!;
-    const storageKey = `snappjack-credentials-${appId}`;
+    const snappId = process.env.NEXT_PUBLIC_SNAPPJACK_SNAPP_ID!;
+    const storageKey = `snappjack-credentials-${snappId}`;
     
     // Check localStorage for existing credentials
     const storedCredentials = localStorage.getItem(storageKey);

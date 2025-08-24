@@ -40,7 +40,7 @@ export interface ConnectionStatusProps {
 export interface AgentConfigProps {
   connectionData: {
     userApiKey: string;
-    appId: string;
+    snappId: string;
     userId: string;
     mcpEndpoint: string;
   } | null;
