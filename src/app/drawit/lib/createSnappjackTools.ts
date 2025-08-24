@@ -11,6 +11,7 @@ import {
   TextParams,
   PolygonParams
 } from '@/app/drawit/types/drawit';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from './constants';
 
 // Parameter types now imported from shared types file
 
@@ -27,8 +28,6 @@ interface DrawingAPI {
   getCanvasImage: () => string;
 }
 
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 800;
 
 function formatNumericValue<T>(value: T, decimals: number = 2): T {
   if (typeof value === 'number') {
