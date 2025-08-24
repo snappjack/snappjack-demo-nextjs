@@ -1,7 +1,10 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useDrawit } from './hooks/useDrawit';
-import { useSnappjack } from './hooks/useSnappjack';
+import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
+import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
+import { createSnappjackTools } from './lib/createSnappjackTools';
 import Canvas from './components/Canvas';
 import ObjectList from './components/ObjectList';
 import CanvasToolbar from './components/CanvasToolbar';
@@ -14,6 +17,7 @@ export default function DrawItPage() {
   const APP_NAME = 'DrawIt';
   const APP_EMOJI = '🎨';
   
+  // Drawing functionality
   const {
     drawingState,
     canvasRef,
@@ -50,31 +54,38 @@ export default function DrawItPage() {
     CANVAS_HEIGHT
   } = useDrawit(APP_NAME);
 
-  const { status, connectionData, availableTools, connectionError, resetCredentials } = useSnappjack({
-    addRectangle,
-    addCircle,
-    addText,
-    addPolygon,
-    modifyObject,
-    deleteObject,
-    reorderObject,
-    clearCanvas,
-    getCanvasStatus,
-    getCanvasImage,
-    appName: APP_NAME
+  // Credential management
+  const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({ 
+    appName: APP_NAME, 
+    snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID! 
   });
 
-  const handleCanvasClick = () => {
-    selectObject(null);
-  };
+  // Create Snappjack tools from drawing API (memoized to prevent infinite re-renders)
+  const snappjackTools = useMemo(() => {
+    const drawingAPI = {
+      addRectangle,
+      addCircle,
+      addText,
+      addPolygon,
+      modifyObject,
+      deleteObject,
+      reorderObject,
+      clearCanvas,
+      getCanvasStatus,
+      getCanvasImage
+    };
+    return createSnappjackTools(drawingAPI, APP_NAME);
+  }, [addRectangle, addCircle, addText, addPolygon, modifyObject, deleteObject, reorderObject, clearCanvas, getCanvasStatus, getCanvasImage]);
 
-  const handleObjectClick = (id: string) => {
-    selectObject(id);
-  };
+  // Snappjack connection management
+  const { status, connectionData, availableTools } = useSnappjackConnection({
+    credentials,
+    isLoadingCredentials,
+    snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!,
+    tools: snappjackTools,
+    onConnectionError: setConnectionError
+  });
 
-  const handleObjectDrag = (id: string, x: number, y: number) => {
-    moveObject(id, x, y);
-  };
 
   return (
     <div className="bg-gray-100 py-8">
@@ -130,9 +141,9 @@ export default function DrawItPage() {
                   creationStart={drawingState.creationStart}
                   polygonVertices={drawingState.polygonVertices}
                   handleInteraction={drawingState.handleInteraction}
-                  onCanvasClick={handleCanvasClick}
-                  onObjectClick={handleObjectClick}
-                  onObjectDrag={handleObjectDrag}
+                  onCanvasClick={() => selectObject(null)}
+                  onObjectClick={selectObject}
+                  onObjectDrag={moveObject}
                   onStartCreation={startCreation}
                   onFinishCreation={finishCreation}
                   onUpdateCreation={updateCreation}

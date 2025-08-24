@@ -1,7 +1,10 @@
 'use client';
 
+import { useMemo } from 'react';
 import { usePipster } from './hooks/usePipster';
-import { useSnappjack } from './hooks/useSnappjack';
+import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
+import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
+import { createSnappjackTools } from './lib/createSnappjackTools';
 import DiceContainer from './components/DiceContainer';
 import RollerButtons from './components/RollerButtons';
 import KeepDieStatus from './components/KeepDieStatus';
@@ -13,6 +16,7 @@ export default function DicePage() {
   const APP_NAME = 'Pipster';
   const APP_EMOJI = '🎲';
   
+  // Dice game functionality
   const {
     gameState,
     rollingIndices,
@@ -26,12 +30,30 @@ export default function DicePage() {
     getCurrentDiceState,
   } = usePipster();
 
-  const { status, connectionData, availableTools, connectionError, resetCredentials } = useSnappjack({
-    getCurrentDiceState,
-    setDicePlan,
-    performRoll,
-    resetGame,
-    appName: APP_NAME,
+  // Credential management
+  const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({ 
+    appName: APP_NAME, 
+    snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID! 
+  });
+
+  // Create Snappjack tools from dice game API (memoized to prevent infinite re-renders)
+  const snappjackTools = useMemo(() => {
+    const diceGameAPI = {
+      getCurrentDiceState,
+      setDicePlan,
+      performRoll,
+      resetGame
+    };
+    return createSnappjackTools(diceGameAPI, APP_NAME);
+  }, [getCurrentDiceState, setDicePlan, performRoll, resetGame]);
+
+  // Snappjack connection management
+  const { status, connectionData, availableTools } = useSnappjackConnection({
+    credentials,
+    isLoadingCredentials,
+    snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID!,
+    tools: snappjackTools,
+    onConnectionError: setConnectionError
   });
 
   const isRollDisabled = gameState.keptDice.filter(kept => kept).length === 5;
