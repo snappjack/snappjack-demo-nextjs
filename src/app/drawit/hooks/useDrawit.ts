@@ -924,7 +924,7 @@ export const useDrawit = (appName: string) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, []);
+  }, [appName]);
 
   const loadCanvas = useCallback((file: File): Promise<void> => {
     return new Promise((resolve, reject) => {

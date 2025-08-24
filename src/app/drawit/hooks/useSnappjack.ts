@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
 import { CanvasStatus, CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/app/drawit/types/drawit';
-import { useSnappjackCredentials } from '@/contexts/SnappjackCredentialsContext';
+import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
 
 interface RectangleParams {
   x?: number;
@@ -57,6 +57,7 @@ interface SnappjackHookProps {
   getCanvasImage: () => string;
   appName: string;
 }
+
 
 // Helper function to format numeric values with limited precision
 function formatNumericValue<T>(value: T, decimals: number = 2): T {
@@ -195,22 +196,14 @@ export const useSnappjack = ({
   const [status, setStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
-  const [connectionError, setConnectionError] = useState<{type: string; message: string; canResetCredentials: boolean} | null>(null);
   const snappjackRef = useRef<Snappjack | null>(null);
-  
-  // Use shared credentials from context
-  const { credentials, resetCredentials: resetSharedCredentials } = useSnappjackCredentials();
 
-  // Function to reset credentials and create new user
-  const resetCredentials = useCallback(async () => {
-    // Reset SDK credentials if it exists
-    if (snappjackRef.current) {
-      snappjackRef.current.resetCredentials();
-    }
-    
-    setConnectionError(null);
-    await resetSharedCredentials();
-  }, [resetSharedCredentials]);
+  // Use shared credential management
+  const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({ 
+    appName, 
+    snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID! 
+  });
+
 
   const handlersRef = useRef<{
     handleSystem: ToolHandler;
@@ -243,7 +236,7 @@ export const useSnappjack = ({
         text: info
       }]
     };
-  }, [getCanvasStatus]);
+  }, [getCanvasStatus, appName]);
 
   handlersRef.current.handleRectangle = useCallback(async (args: unknown): Promise<ToolResponse> => {
     const params = args as Record<string, unknown>;
@@ -389,7 +382,7 @@ export const useSnappjack = ({
 
   // Initialize Snappjack when credentials are available
   useEffect(() => {
-    if (typeof window === 'undefined' || !credentials) return;
+    if (typeof window === 'undefined' || !credentials || isLoadingCredentials) return;
 
     const tools: Tool[] = [
       {
@@ -552,8 +545,7 @@ export const useSnappjack = ({
     const snappjack = new Snappjack({
       userId: credentials.userId,
       userApiKey: credentials.userApiKey,
-      snappId: process.env.NEXT_PUBLIC_SNAPPJACK_SNAPP_ID!,
-      serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL,
+      snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!,
       tools: tools,
       autoReconnect: true
     });
@@ -598,7 +590,7 @@ export const useSnappjack = ({
       snappjack.removeAllListeners();
       snappjack.disconnect();
     };
-  }, [credentials, addRectangle, addCircle, addText, addPolygon, modifyObject, deleteObject, reorderObject, clearCanvas, getCanvasStatus, getCanvasImage]);
+  }, [credentials, isLoadingCredentials, addRectangle, addCircle, addText, addPolygon, modifyObject, deleteObject, reorderObject, clearCanvas, getCanvasStatus, getCanvasImage, appName, setConnectionError]);
 
   return {
     status,

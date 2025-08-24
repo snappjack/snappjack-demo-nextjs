@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool, ToolResponse, ToolHandler } from '@snappjack/sdk-js';
 import { GameState, DiceState } from '@/app/pipster/types/pipster';
-import { useSnappjackCredentials } from '@/contexts/SnappjackCredentialsContext';
+import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
 
 interface SnappjackHookProps {
   getCurrentDiceState: () => DiceState;
@@ -10,6 +10,7 @@ interface SnappjackHookProps {
   resetGame: () => GameState;
   appName: string;
 }
+
 
 export const useSnappjack = ({ 
   getCurrentDiceState, 
@@ -21,22 +22,14 @@ export const useSnappjack = ({
   const [status, setStatus] = useState<SnappjackStatus>('disconnected');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
-  const [connectionError, setConnectionError] = useState<{type: string; message: string; canResetCredentials: boolean} | null>(null);
   const snappjackRef = useRef<Snappjack | null>(null);
-  
-  // Use shared credentials from context
-  const { credentials, resetCredentials: resetSharedCredentials } = useSnappjackCredentials();
 
-  // Function to reset credentials and create new user
-  const resetCredentials = useCallback(async () => {
-    // Reset SDK credentials if it exists
-    if (snappjackRef.current) {
-      snappjackRef.current.resetCredentials();
-    }
-    
-    setConnectionError(null);
-    await resetSharedCredentials();
-  }, [resetSharedCredentials]);
+  // Use shared credential management
+  const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({ 
+    appName, 
+    snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID! 
+  });
+
 
   // Use refs to maintain stable references to handlers while allowing access to latest props
   const handlersRef = useRef<{
@@ -88,7 +81,7 @@ Important Rules:
         text: message
       }]
     };
-  }, [getCurrentDiceState]);
+  }, [getCurrentDiceState, appName]);
 
   handlersRef.current.handleAgentDicePlan = useCallback(async (args: unknown): Promise<ToolResponse> => {
     const { actions } = args as { actions: string[] };
@@ -136,7 +129,7 @@ Important Rules:
 
   // Initialize Snappjack when credentials are available
   useEffect(() => {
-    if (typeof window === 'undefined' || !credentials) return;
+    if (typeof window === 'undefined' || !credentials || isLoadingCredentials) return;
 
     const tools: Tool[] = [
       {
@@ -192,8 +185,7 @@ Important Rules:
     const snappjack = new Snappjack({
       userId: credentials.userId,
       userApiKey: credentials.userApiKey,
-      snappId: process.env.NEXT_PUBLIC_SNAPPJACK_SNAPP_ID!,
-      serverUrl: process.env.NEXT_PUBLIC_SNAPPJACK_SERVER_URL,
+      snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID!,
       tools: tools,
       autoReconnect: true
     });
@@ -238,7 +230,7 @@ Important Rules:
       snappjack.removeAllListeners();
       snappjack.disconnect();
     };
-  }, [credentials, getCurrentDiceState, setDicePlan, performRoll, resetGame]); // Re-run when credentials change
+  }, [credentials, isLoadingCredentials, getCurrentDiceState, setDicePlan, performRoll, resetGame, appName, setConnectionError]); // Re-run when credentials change
 
   return {
     status,
