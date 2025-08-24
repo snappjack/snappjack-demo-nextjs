@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { useDrawit } from './hooks/useDrawit';
+import { useFileOperations } from './hooks/useFileOperations';
+import { useCanvasInteraction } from './hooks/useCanvasInteraction';
 import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
 import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
 import { createSnappjackTools } from './lib/createSnappjackTools';
@@ -40,19 +42,28 @@ export default function DrawItPage() {
     addPolygonVertex,
     finishPolygon,
     cancelCreation,
-    resizeObject,
-    rotateObject,
     startHandleInteraction,
     endHandleInteraction,
-    saveCanvas,
-    loadCanvas,
+    loadObjects,
     defaultStrokeColor,
     defaultFillColor,
     setDefaultStrokeColor,
     setDefaultFillColor,
     CANVAS_WIDTH,
     CANVAS_HEIGHT
-  } = useDrawit(APP_NAME);
+  } = useDrawit();
+
+  // File operations
+  const { saveCanvas, loadCanvas } = useFileOperations({
+    objects: drawingState.objects,
+    appName: APP_NAME,
+    onLoadObjects: loadObjects
+  });
+
+  // Canvas interactions
+  const { resizeObject, rotateObject } = useCanvasInteraction({
+    onUpdateObject: modifyObject
+  });
 
   // Credential management
   const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({ 
@@ -148,8 +159,11 @@ export default function DrawItPage() {
                   onFinishCreation={finishCreation}
                   onUpdateCreation={updateCreation}
                   onAddPolygonVertex={addPolygonVertex}
-                  onResizeObject={resizeObject}
-                  onRotateObject={rotateObject}
+                  onResizeObject={(id, handleType, newX, newY) => resizeObject(id, handleType, newX, newY, drawingState.handleInteraction)}
+                  onRotateObject={(id, mouseX, mouseY) => {
+                    const obj = drawingState.objects.find(o => o.id === id);
+                    if (obj) rotateObject(id, mouseX, mouseY, obj.x, obj.y);
+                  }}
                   onStartHandleInteraction={startHandleInteraction}
                   onEndHandleInteraction={endHandleInteraction}
                 />

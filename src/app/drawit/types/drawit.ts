@@ -79,3 +79,12 @@ export interface CanvasStatus {
   objects: CanvasObject[];
   selectedObjectId: string | null;
 }
+
+// Parameter types for object creation/modification - derived from object types for DRY principle
+export type RectangleParams = Partial<RectangleObject>;
+
+export type CircleParams = Partial<CircleObject>;
+
+export type TextParams = Partial<TextObject>;
+
+export type PolygonParams = Partial<PolygonObject>;

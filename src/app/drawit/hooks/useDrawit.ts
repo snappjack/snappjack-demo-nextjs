@@ -2,45 +2,18 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   DrawingState, 
   CanvasObject, 
-  CanvasStatus, 
-  RectangleObject, 
-  CircleObject, 
-  TextObject, 
-  PolygonObject,
-  BoundingBox,
   CreationMode,
-  HandleType 
+  HandleType,
+  RectangleParams,
+  CircleParams,
+  TextParams,
+  PolygonParams
 } from '@/app/drawit/types/drawit';
 import { CanvasHandle } from '../components/Canvas';
+import { DrawingEngine } from '../lib/DrawingEngine';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../lib/constants';
 
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 800;
-
-// Object dimension constraints
-export const CONSTRAINTS = {
-  rectangle: {
-    width: { min: 1, max: 100 },
-    height: { min: 1, max: 100 },
-    cornerRadius: { min: 0, max: 100 }
-  },
-  circle: {
-    radius: { min: 1, max: 50 }
-  },
-  text: {
-    fontSize: { min: 1, max: 50 }
-  },
-  common: {
-    position: { min: 0, max: 100 },
-    strokeWidth: { min: 1, max: 20 },
-    rotation: { min: -360, max: 360 }
-  },
-  polygon: {
-    maxVertices: 50,
-    minVertices: 3
-  }
-};
-
-export const useDrawit = (appName: string) => {
+export const useDrawit = () => {
   const [drawingState, setDrawingState] = useState<DrawingState>({
     objects: [],
     selectedObject: null,
@@ -57,417 +30,108 @@ export const useDrawit = (appName: string) => {
   
   const canvasRef = useRef<CanvasHandle>(null);
   const drawingStateRef = useRef(drawingState);
+  const drawingEngineRef = useRef<DrawingEngine | null>(null);
   
   useEffect(() => {
     drawingStateRef.current = drawingState;
   }, [drawingState]);
 
-  const generateId = useCallback((): string => {
-    return Math.random().toString(36).substring(2, 11);
-  }, []);
+  // Initialize drawing engine when colors change
+  useEffect(() => {
+    drawingEngineRef.current = new DrawingEngine(defaultStrokeColor, defaultFillColor);
+  }, [defaultStrokeColor, defaultFillColor]);
 
-  const clamp = useCallback((value: number, min: number, max: number): number => {
-    return Math.min(Math.max(value, min), max);
-  }, []);
-
-  const validateColor = useCallback((color: string): boolean => {
-    const div = document.createElement('div');
-    div.style.color = color;
-    return div.style.color !== '';
-  }, []);
-
-  const calculateBoundingBox = useCallback((obj: CanvasObject): BoundingBox => {
-    let minX: number, minY: number, maxX: number, maxY: number;
+  // Object creation methods
+  const addRectangle = useCallback((params: RectangleParams) => {
+    if (!drawingEngineRef.current) return null;
     
-    switch (obj.type) {
-      case 'rectangle':
-        const rect = obj as RectangleObject;
-        const halfWidth = rect.width / 2;
-        const halfHeight = rect.height / 2;
-        minX = obj.x - halfWidth;
-        minY = obj.y - halfHeight;
-        maxX = obj.x + halfWidth;
-        maxY = obj.y + halfHeight;
-        break;
-        
-      case 'circle':
-        const circle = obj as CircleObject;
-        const radiusX = circle.radius;
-        const radiusY = circle.radius;
-        minX = obj.x - radiusX;
-        minY = obj.y - radiusY;
-        maxX = obj.x + radiusX;
-        maxY = obj.y + radiusY;
-        break;
-        
-      case 'text':
-        const text = obj as TextObject;
-        const estimatedCharWidth = text.fontSize * 0.6;
-        const estimatedWidth = Math.min(text.text.length * estimatedCharWidth, 100);
-        const estimatedHeight = text.fontSize;
-        const halfEstimatedWidth = estimatedWidth / 2;
-        const halfEstimatedHeight = estimatedHeight / 2;
-        minX = obj.x - halfEstimatedWidth;
-        minY = obj.y - halfEstimatedHeight;
-        maxX = obj.x + halfEstimatedWidth;
-        maxY = obj.y + halfEstimatedHeight;
-        break;
-        
-      case 'polygon':
-        const polygon = obj as PolygonObject;
-        if (polygon.vertices.length === 0) {
-          minX = obj.x;
-          minY = obj.y;
-          maxX = obj.x;
-          maxY = obj.y;
-        } else {
-          minX = Math.min(...polygon.vertices.map(v => v.x));
-          minY = Math.min(...polygon.vertices.map(v => v.y));
-          maxX = Math.max(...polygon.vertices.map(v => v.x));
-          maxY = Math.max(...polygon.vertices.map(v => v.y));
-        }
-        break;
-    }
-    
-    // Don't clamp bounding box to canvas bounds - allow objects to extend outside
-    // This preserves shape integrity when dragging near edges
-    
-    const width = maxX - minX;
-    const height = maxY - minY;
-    
-    return { minX, minY, maxX, maxY, width, height };
-  }, []);
-
-
-  const addRectangle = useCallback((params: {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-    color?: string;
-    fillColor?: string;
-    strokeWidth?: number;
-    rotation?: number;
-    cornerRadius?: number;
-  }): RectangleObject => {
-    
-    const { 
-      x = 50, 
-      y = 50, 
-      width = 20, 
-      height = 15, 
-      color = defaultStrokeColor, 
-      fillColor = defaultFillColor, 
-      strokeWidth = 2, 
-      rotation = 0, 
-      cornerRadius = 0  
-    } = params;
-
-    
-    if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color || 'undefined'}`);
-    }
-    if (fillColor && !validateColor(fillColor)) {
-      throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
-    }
-    
-    const id = generateId();
-    const rectangle: RectangleObject = {
-      id,
-      name: `rectangle_${id}`,
-      type: 'rectangle',
-      x: clamp(x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-      y: clamp(y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-      width: clamp(width, CONSTRAINTS.rectangle.width.min, CONSTRAINTS.rectangle.width.max),
-      height: clamp(height, CONSTRAINTS.rectangle.height.min, CONSTRAINTS.rectangle.height.max),
-      color,
-      fillColor,
-      strokeWidth: clamp(strokeWidth, CONSTRAINTS.common.strokeWidth.min, CONSTRAINTS.common.strokeWidth.max),
-      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
-      cornerRadius: clamp(cornerRadius, CONSTRAINTS.rectangle.cornerRadius.min, CONSTRAINTS.rectangle.cornerRadius.max),
-      boundingBox: {} as BoundingBox
-    };
-    
-    rectangle.boundingBox = calculateBoundingBox(rectangle);
-    
+    const rectangle = drawingEngineRef.current.addRectangle(params);
     setDrawingState(prev => ({
       ...prev,
       objects: [...prev.objects, rectangle]
     }));
     
     return rectangle;
-  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor, defaultFillColor]);
+  }, []);
 
-  const addCircle = useCallback((params: {
-    x?: number;
-    y?: number;
-    radius?: number;
-    color?: string;
-    fillColor?: string;
-    strokeWidth?: number;
-    rotation?: number;
-  }): CircleObject => {
+  const addCircle = useCallback((params: CircleParams) => {
+    if (!drawingEngineRef.current) return null;
     
-    const { 
-      x = 50, 
-      y = 50, 
-      radius = 15, 
-      color = defaultStrokeColor, 
-      fillColor = defaultFillColor, 
-      strokeWidth = 2, 
-      rotation = 0 
-    } = params;
-
-    
-    if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color || 'undefined'}`);
-    }
-    if (fillColor && !validateColor(fillColor)) {
-      throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
-    }
-    
-    const id = generateId();
-    const circle: CircleObject = {
-      id,
-      name: `circle_${id}`,
-      type: 'circle',
-      x: clamp(x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-      y: clamp(y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-      radius: clamp(radius, CONSTRAINTS.circle.radius.min, CONSTRAINTS.circle.radius.max),
-      color,
-      fillColor,
-      strokeWidth: clamp(strokeWidth, CONSTRAINTS.common.strokeWidth.min, CONSTRAINTS.common.strokeWidth.max),
-      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
-      boundingBox: {} as BoundingBox
-    };
-    
-    circle.boundingBox = calculateBoundingBox(circle);
-    
+    const circle = drawingEngineRef.current.addCircle(params);
     setDrawingState(prev => ({
       ...prev,
       objects: [...prev.objects, circle]
     }));
     
     return circle;
-  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor, defaultFillColor]);
+  }, []);
 
-  const addText = useCallback((params: {
-    x?: number;
-    y?: number;
-    text?: string;
-    fontSize?: number;
-    color?: string;
-    fontFamily?: string;
-    fontWeight?: string;
-    rotation?: number;
-  }): TextObject => {
+  const addText = useCallback((params: TextParams) => {
+    if (!drawingEngineRef.current) return null;
     
-    const { 
-      x = 50, 
-      y = 50, 
-      text = 'Text', 
-      fontSize = 5, 
-      color = defaultStrokeColor, 
-      fontFamily = 'Arial', 
-      fontWeight = 'normal', 
-      rotation = 0 
-    } = params;
-
-    if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color || 'undefined'}`);
-    }
-    
-    const id = generateId();
-    const textObject: TextObject = {
-      id,
-      name: `text_${id}`,
-      type: 'text',
-      x: clamp(x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-      y: clamp(y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-      text,
-      fontSize: clamp(fontSize, CONSTRAINTS.text.fontSize.min, CONSTRAINTS.text.fontSize.max),
-      color,
-      fontFamily,
-      fontWeight,
-      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
-      boundingBox: {} as BoundingBox
-    };
-    
-    textObject.boundingBox = calculateBoundingBox(textObject);
-    
+    const textObject = drawingEngineRef.current.addText(params);
     setDrawingState(prev => ({
       ...prev,
       objects: [...prev.objects, textObject]
     }));
     
     return textObject;
-  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor]);
+  }, []);
 
-  const addPolygon = useCallback((params: {
-    vertices?: Array<{ x: number; y: number }>;
-    color?: string;
-    fillColor?: string;
-    strokeWidth?: number;
-    rotation?: number;
-  }): PolygonObject => {
+  const addPolygon = useCallback((params: PolygonParams) => {
+    if (!drawingEngineRef.current) return null;
     
-    const { 
-      vertices = [
-        { x: 50, y: 20 }, 
-        { x: 30, y: 60 }, 
-        { x: 70, y: 60 }
-      ], 
-      color = defaultStrokeColor, 
-      fillColor = defaultFillColor, 
-      strokeWidth = 2, 
-      rotation = 0 
-    } = params;
-
-    
-    if (!validateColor(color)) {
-      throw new Error(`Invalid color: ${color || 'undefined'}`);
-    }
-    if (fillColor && !validateColor(fillColor)) {
-      throw new Error(`Invalid fill color: ${fillColor || 'undefined'}`);
-    }
-    if (vertices.length < CONSTRAINTS.polygon.minVertices) {
-      throw new Error(`Polygon must have at least ${CONSTRAINTS.polygon.minVertices} vertices`);
-    }
-    if (vertices.length > CONSTRAINTS.polygon.maxVertices) {
-      throw new Error(`Polygon cannot have more than ${CONSTRAINTS.polygon.maxVertices} vertices`);
-    }
-    
-    const validatedVertices = vertices.map((vertex, index) => {
-      if (typeof vertex.x !== 'number' || typeof vertex.y !== 'number') {
-        throw new Error(`Vertex ${index + 1} must have numeric x and y coordinates`);
-      }
-      return {
-        x: clamp(vertex.x, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max),
-        y: clamp(vertex.y, CONSTRAINTS.common.position.min, CONSTRAINTS.common.position.max)
-      };
-    });
-    
-    const centerX = validatedVertices.reduce((sum, v) => sum + v.x, 0) / validatedVertices.length;
-    const centerY = validatedVertices.reduce((sum, v) => sum + v.y, 0) / validatedVertices.length;
-    
-    const id = generateId();
-    const polygon: PolygonObject = {
-      id,
-      name: `polygon_${id}`,
-      type: 'polygon',
-      x: centerX,
-      y: centerY,
-      vertices: validatedVertices,
-      color,
-      fillColor,
-      strokeWidth: clamp(strokeWidth, CONSTRAINTS.common.strokeWidth.min, CONSTRAINTS.common.strokeWidth.max),
-      rotation: clamp(rotation, CONSTRAINTS.common.rotation.min, CONSTRAINTS.common.rotation.max),
-      boundingBox: {} as BoundingBox
-    };
-    
-    polygon.boundingBox = calculateBoundingBox(polygon);
-    
+    const polygon = drawingEngineRef.current.addPolygon(params);
     setDrawingState(prev => ({
       ...prev,
       objects: [...prev.objects, polygon]
     }));
     
     return polygon;
-  }, [generateId, validateColor, clamp, calculateBoundingBox, defaultStrokeColor, defaultFillColor]);
+  }, []);
 
-  const modifyObject = useCallback((id: string, updates: Partial<CanvasObject>): CanvasObject => {
+  // Object manipulation methods
+  const modifyObject = useCallback((id: string, updates: Partial<CanvasObject>) => {
+    if (!drawingEngineRef.current) return null;
     
     const currentState = drawingStateRef.current;
-    const objectIndex = currentState.objects.findIndex(obj => obj.id === id);
-    
-    if (objectIndex === -1) {
-      throw new Error(`Object with ID "${id}" not found`);
-    }
-    
-    const existingObject = currentState.objects[objectIndex];
-    const updatedObject = { ...existingObject, ...updates } as CanvasObject;
-    updatedObject.boundingBox = calculateBoundingBox(updatedObject);
+    const { updatedObjects, updatedObject } = drawingEngineRef.current.modifyObject(currentState.objects, id, updates);
     
     setDrawingState(prev => ({
       ...prev,
-      objects: prev.objects.map((obj, i) => i === objectIndex ? updatedObject : obj),
+      objects: updatedObjects,
       selectedObject: prev.selectedObject?.id === id ? updatedObject : prev.selectedObject
     }));
     
     return updatedObject;
-  }, [calculateBoundingBox]);
+  }, []);
 
-  const deleteObject = useCallback((id: string): void => {
+  const deleteObject = useCallback((id: string) => {
+    if (!drawingEngineRef.current) return;
+    
+    const currentState = drawingStateRef.current;
+    const updatedObjects = drawingEngineRef.current.deleteObject(currentState.objects, id);
     
     setDrawingState(prev => ({
       ...prev,
-      objects: prev.objects.filter(obj => obj.id !== id),
+      objects: updatedObjects,
       selectedObject: prev.selectedObject?.id === id ? null : prev.selectedObject
     }));
   }, []);
 
-  const reorderObject = useCallback((id: string, operation: 'up' | 'down' | 'top' | 'bottom' | 'above' | 'below', referenceId?: string): void => {
+  const reorderObject = useCallback((id: string, operation: 'up' | 'down' | 'top' | 'bottom' | 'above' | 'below', referenceId?: string) => {
+    if (!drawingEngineRef.current) return;
     
     const currentState = drawingStateRef.current;
-    const currentIndex = currentState.objects.findIndex(obj => obj.id === id);
+    const updatedObjects = drawingEngineRef.current.reorderObject(currentState.objects, id, operation, referenceId);
     
-    if (currentIndex === -1) {
-      throw new Error(`Object with ID "${id}" not found`);
-    }
-    
-    let newIndex = currentIndex;
-    
-    switch (operation) {
-      case 'up':
-        newIndex = Math.min(currentIndex + 1, currentState.objects.length - 1);
-        break;
-      case 'down':
-        newIndex = Math.max(currentIndex - 1, 0);
-        break;
-      case 'top':
-        newIndex = currentState.objects.length - 1;
-        break;
-      case 'bottom':
-        newIndex = 0;
-        break;
-      case 'above':
-      case 'below':
-        if (!referenceId) {
-          throw new Error(`Reference ID is required for "${operation}" operation`);
-        }
-        const referenceIndex = currentState.objects.findIndex(obj => obj.id === referenceId);
-        if (referenceIndex === -1) {
-          throw new Error(`Reference object with ID "${referenceId}" not found`);
-        }
-        if (operation === 'above') {
-          // Place object in front of (after) the reference object in array
-          newIndex = referenceIndex + 1;
-          // If we're moving an object from before the reference, adjust for the removal
-          if (currentIndex < referenceIndex) {
-            newIndex = referenceIndex;
-          }
-        } else { // below
-          // Place object behind (before) the reference object in array
-          newIndex = referenceIndex;
-          // If we're moving an object from after the reference, adjust for the removal
-          if (currentIndex > referenceIndex) {
-            newIndex = referenceIndex;
-          }
-        }
-        break;
-    }
-    
-    if (newIndex !== currentIndex) {
-      setDrawingState(prev => {
-        const newObjects = [...prev.objects];
-        const [movedObject] = newObjects.splice(currentIndex, 1);
-        newObjects.splice(newIndex, 0, movedObject);
-        return { ...prev, objects: newObjects };
-      });
-    }
+    setDrawingState(prev => ({
+      ...prev,
+      objects: updatedObjects
+    }));
   }, []);
 
-  const clearCanvas = useCallback((): void => {
+  const clearCanvas = useCallback(() => {
     setDrawingState(prev => ({
       ...prev,
       objects: [],
@@ -475,7 +139,23 @@ export const useDrawit = (appName: string) => {
     }));
   }, []);
 
-  const selectObject = useCallback((id: string | null): void => {
+  const moveObject = useCallback((id: string, newX: number, newY: number) => {
+    if (!drawingEngineRef.current) return;
+    
+    const currentState = drawingStateRef.current;
+    const { updatedObjects, updatedObject } = drawingEngineRef.current.moveObject(currentState.objects, id, newX, newY);
+    
+    if (updatedObject) {
+      setDrawingState(prev => ({
+        ...prev,
+        objects: updatedObjects,
+        selectedObject: prev.selectedObject?.id === id ? updatedObject : prev.selectedObject
+      }));
+    }
+  }, []);
+
+  // Selection and UI state methods
+  const selectObject = useCallback((id: string | null) => {
     if (id === null) {
       setDrawingState(prev => ({ ...prev, selectedObject: null }));
       return;
@@ -485,65 +165,6 @@ export const useDrawit = (appName: string) => {
     if (obj) {
       setDrawingState(prev => ({ ...prev, selectedObject: obj }));
     }
-  }, []);
-
-  const moveObject = useCallback((id: string, newX: number, newY: number): void => {
-    const currentState = drawingStateRef.current;
-    const objectIndex = currentState.objects.findIndex(obj => obj.id === id);
-    
-    if (objectIndex === -1) return;
-    
-    const originalObject = currentState.objects[objectIndex];
-    
-    let updatedObject = {
-      ...originalObject,
-      x: newX,
-      y: newY
-    };
-    
-    // Special handling for polygons - move vertices to match new center
-    if (originalObject.type === 'polygon') {
-      const polygon = originalObject as PolygonObject;
-      const deltaX = newX - originalObject.x;
-      const deltaY = newY - originalObject.y;
-      
-      const updatedVertices = polygon.vertices.map(vertex => ({
-        x: vertex.x + deltaX,
-        y: vertex.y + deltaY
-      }));
-      
-      updatedObject = {
-        ...updatedObject,
-        vertices: updatedVertices
-      } as PolygonObject;
-    }
-    
-    updatedObject.boundingBox = calculateBoundingBox(updatedObject);
-    
-    setDrawingState(prev => ({
-      ...prev,
-      objects: prev.objects.map((obj, i) => i === objectIndex ? updatedObject : obj),
-      selectedObject: prev.selectedObject?.id === id ? updatedObject : prev.selectedObject
-    }));
-  }, [calculateBoundingBox]);
-
-  const getCanvasStatus = useCallback((): CanvasStatus => {
-    const currentState = drawingStateRef.current;
-    return {
-      canvasSize: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT },
-      objectCount: currentState.objects.length,
-      objects: currentState.objects,
-      selectedObjectId: currentState.selectedObject?.id || null
-    };
-  }, []);
-
-  const getCanvasImage = useCallback((): string => {
-    if (!canvasRef.current) {
-      throw new Error('Canvas not available');
-    }
-    const dataUrl = canvasRef.current.toDataURL('image/png');
-    const base64Data = dataUrl.split(',')[1];
-    return base64Data;
   }, []);
 
   const setCreationMode = useCallback((mode: CreationMode) => {
@@ -677,215 +298,7 @@ export const useDrawit = (appName: string) => {
     }));
   }, []);
 
-  const resizeObject = useCallback((id: string, handleType: string, newX: number, newY: number): void => {
-    const currentState = drawingStateRef.current;
-    const objectIndex = currentState.objects.findIndex(obj => obj.id === id);
-    
-    if (objectIndex === -1 || !currentState.handleInteraction) return;
-    
-    const originalObject = currentState.handleInteraction.startObject;
-    let updatedObject = { ...currentState.objects[objectIndex] };
-    
-    // Get the object's rotation
-    const rotation = (originalObject.rotation || 0) * Math.PI / 180;
-    
-    // Transform mouse coordinates to local space (unrotated)
-    const cos = Math.cos(-rotation);
-    const sin = Math.sin(-rotation);
-    
-    // Transform both current and start positions to local space
-    const transformToLocal = (x: number, y: number) => {
-      const dx = x - originalObject.x;
-      const dy = y - originalObject.y;
-      return {
-        x: originalObject.x + dx * cos - dy * sin,
-        y: originalObject.y + dx * sin + dy * cos
-      };
-    };
-    
-    const localNew = transformToLocal(newX, newY);
-    
-    // Calculate resize based on handle type
-    if (originalObject.type === 'rectangle') {
-      updatedObject = updatedObject as RectangleObject;
-      const rect = updatedObject as RectangleObject;
-      const startRect = originalObject as RectangleObject;
-      
-      // For rectangles, we need to work in world space to make the corner follow the mouse exactly
-      // First, calculate the corners in world space (rotated)
-      
-      const halfWidth = startRect.width / 2;
-      const halfHeight = startRect.height / 2;
-      
-      // Calculate corners in local space first
-      const localCorners = {
-        nw: { x: startRect.x - halfWidth, y: startRect.y - halfHeight },
-        ne: { x: startRect.x + halfWidth, y: startRect.y - halfHeight },
-        se: { x: startRect.x + halfWidth, y: startRect.y + halfHeight },
-        sw: { x: startRect.x - halfWidth, y: startRect.y + halfHeight }
-      };
-      
-      // Transform corners to world space using rotation
-      const worldCorners: Record<string, { x: number; y: number }> = {};
-      Object.keys(localCorners).forEach(key => {
-        const local = localCorners[key as keyof typeof localCorners];
-        const dx = local.x - startRect.x;
-        const dy = local.y - startRect.y;
-        worldCorners[key] = {
-          x: startRect.x + dx * Math.cos(rotation) - dy * Math.sin(rotation),
-          y: startRect.y + dx * Math.sin(rotation) + dy * Math.cos(rotation)
-        };
-      });
-      
-      // Calculate what the moving corner/edge position was when drag started
-      let originalMovingCornerWorld: { x: number; y: number };
-      let currentMovingCornerWorld: { x: number; y: number };
-      let fixedCornerWorld: { x: number; y: number };
-      
-      // First, determine the original positions when drag started
-      switch (handleType) {
-        case 'nw':
-          fixedCornerWorld = worldCorners.se;
-          originalMovingCornerWorld = worldCorners.nw;
-          break;
-        case 'ne':
-          fixedCornerWorld = worldCorners.sw;
-          originalMovingCornerWorld = worldCorners.ne;
-          break;
-        case 'se':
-          fixedCornerWorld = worldCorners.nw;
-          originalMovingCornerWorld = worldCorners.se;
-          break;
-        case 'sw':
-          fixedCornerWorld = worldCorners.ne;
-          originalMovingCornerWorld = worldCorners.sw;
-          break;
-        case 'n':
-          fixedCornerWorld = { x: (worldCorners.sw.x + worldCorners.se.x) / 2, y: (worldCorners.sw.y + worldCorners.se.y) / 2 };
-          originalMovingCornerWorld = { x: (worldCorners.nw.x + worldCorners.ne.x) / 2, y: (worldCorners.nw.y + worldCorners.ne.y) / 2 };
-          break;
-        case 's':
-          fixedCornerWorld = { x: (worldCorners.nw.x + worldCorners.ne.x) / 2, y: (worldCorners.nw.y + worldCorners.ne.y) / 2 };
-          originalMovingCornerWorld = { x: (worldCorners.sw.x + worldCorners.se.x) / 2, y: (worldCorners.sw.y + worldCorners.se.y) / 2 };
-          break;
-        case 'w':
-          fixedCornerWorld = { x: (worldCorners.ne.x + worldCorners.se.x) / 2, y: (worldCorners.ne.y + worldCorners.se.y) / 2 };
-          originalMovingCornerWorld = { x: (worldCorners.nw.x + worldCorners.sw.x) / 2, y: (worldCorners.nw.y + worldCorners.sw.y) / 2 };
-          break;
-        case 'e':
-          fixedCornerWorld = { x: (worldCorners.nw.x + worldCorners.sw.x) / 2, y: (worldCorners.nw.y + worldCorners.sw.y) / 2 };
-          originalMovingCornerWorld = { x: (worldCorners.ne.x + worldCorners.se.x) / 2, y: (worldCorners.ne.y + worldCorners.se.y) / 2 };
-          break;
-        default:
-          fixedCornerWorld = worldCorners.nw;
-          originalMovingCornerWorld = worldCorners.se;
-      }
-      
-      // Calculate the offset between the original mouse position and the corner
-      const startMouseX = currentState.handleInteraction.startX;
-      const startMouseY = currentState.handleInteraction.startY;
-      const offsetX = originalMovingCornerWorld.x - startMouseX;
-      const offsetY = originalMovingCornerWorld.y - startMouseY;
-      
-      // Apply the same offset to current mouse position
-      switch (handleType) {
-        case 'nw':
-        case 'ne':
-        case 'se':
-        case 'sw':
-          // Corner handles: maintain offset in both directions
-          currentMovingCornerWorld = { x: newX + offsetX, y: newY + offsetY };
-          break;
-        case 'n':
-        case 's':
-          // Vertical edge handles: maintain Y offset, keep X centered
-          currentMovingCornerWorld = { x: originalMovingCornerWorld.x, y: newY + offsetY };
-          break;
-        case 'w':
-        case 'e':
-          // Horizontal edge handles: maintain X offset, keep Y centered  
-          currentMovingCornerWorld = { x: newX + offsetX, y: originalMovingCornerWorld.y };
-          break;
-        default:
-          currentMovingCornerWorld = { x: newX, y: newY };
-      }
-      
-      // Calculate new center in world space
-      const newCenterX = (fixedCornerWorld.x + currentMovingCornerWorld.x) / 2;
-      const newCenterY = (fixedCornerWorld.y + currentMovingCornerWorld.y) / 2;
-      
-      // Calculate new dimensions by measuring the distance between corners
-      // and projecting onto the rectangle's local axes
-      const cornerToCorner = {
-        x: currentMovingCornerWorld.x - fixedCornerWorld.x,
-        y: currentMovingCornerWorld.y - fixedCornerWorld.y
-      };
-      
-      // Project the corner-to-corner vector onto the rectangle's local axes
-      const localAxisX = { x: Math.cos(rotation), y: Math.sin(rotation) };
-      const localAxisY = { x: -Math.sin(rotation), y: Math.cos(rotation) };
-      
-      const projectedWidth = Math.abs(cornerToCorner.x * localAxisX.x + cornerToCorner.y * localAxisX.y);
-      const projectedHeight = Math.abs(cornerToCorner.x * localAxisY.x + cornerToCorner.y * localAxisY.y);
-      
-      // Apply with minimum constraints
-      rect.x = newCenterX;
-      rect.y = newCenterY;
-      rect.width = Math.max(CONSTRAINTS.rectangle.width.min, projectedWidth);
-      rect.height = Math.max(CONSTRAINTS.rectangle.height.min, projectedHeight);
-    } else if (originalObject.type === 'circle') {
-      const circle = updatedObject as CircleObject;
-      const startCircle = originalObject as CircleObject;
-      
-      // For circles, all resize handles adjust the radius
-      // Use the local transformed coordinates for consistent behavior
-      const deltaX = Math.abs(localNew.x - startCircle.x);
-      const deltaY = Math.abs(localNew.y - startCircle.y);
-      const newRadius = Math.max(CONSTRAINTS.circle.radius.min, Math.min(CONSTRAINTS.circle.radius.max, Math.max(deltaX, deltaY)));
-      circle.radius = newRadius;
-    }
-    
-    updatedObject.boundingBox = calculateBoundingBox(updatedObject);
-    
-    setDrawingState(prev => ({
-      ...prev,
-      objects: prev.objects.map((obj, i) => i === objectIndex ? updatedObject : obj),
-      selectedObject: prev.selectedObject?.id === id ? updatedObject : prev.selectedObject
-    }));
-  }, [calculateBoundingBox]);
-
-  const rotateObject = useCallback((id: string, mouseX: number, mouseY: number): void => {
-    const currentState = drawingStateRef.current;
-    const objectIndex = currentState.objects.findIndex(obj => obj.id === id);
-    
-    if (objectIndex === -1) return;
-    
-    const object = currentState.objects[objectIndex];
-    
-    // Calculate angle from object center to mouse position
-    const deltaX = mouseX - object.x;
-    const deltaY = mouseY - object.y;
-    let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
-    
-    // Normalize angle to -180 to 180 range
-    if (angle > 180) angle -= 360;
-    if (angle < -180) angle += 360;
-    
-    const updatedObject = {
-      ...object,
-      rotation: angle
-    };
-    
-    updatedObject.boundingBox = calculateBoundingBox(updatedObject);
-    
-    setDrawingState(prev => ({
-      ...prev,
-      objects: prev.objects.map((obj, i) => i === objectIndex ? updatedObject : obj),
-      selectedObject: prev.selectedObject?.id === id ? updatedObject : prev.selectedObject
-    }));
-  }, [calculateBoundingBox]);
-
-  const startHandleInteraction = useCallback((handleType: string, x: number, y: number, object: CanvasObject): void => {
+  const startHandleInteraction = useCallback((handleType: string, x: number, y: number, object: CanvasObject) => {
     setDrawingState(prev => ({
       ...prev,
       handleInteraction: {
@@ -897,96 +310,76 @@ export const useDrawit = (appName: string) => {
     }));
   }, []);
 
-  const endHandleInteraction = useCallback((): void => {
+  const endHandleInteraction = useCallback(() => {
     setDrawingState(prev => ({
       ...prev,
       handleInteraction: null
     }));
   }, []);
 
-  const saveCanvas = useCallback(() => {
+  // Status and utility methods
+  const getCanvasStatus = useCallback(() => {
+    if (!drawingEngineRef.current) {
+      return {
+        canvasSize: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT },
+        objectCount: 0,
+        objects: [],
+        selectedObjectId: null
+      };
+    }
+    
     const currentState = drawingStateRef.current;
-    const saveData = {
-      version: "1.0",
-      timestamp: new Date().toISOString(),
-      objects: currentState.objects,
-      canvasSize: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT }
-    };
-    
-    const dataStr = JSON.stringify(saveData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${appName.toLowerCase()}-canvas-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, [appName]);
+    return drawingEngineRef.current.getCanvasStatus(currentState.objects, currentState.selectedObject?.id || null);
+  }, []);
 
-  const loadCanvas = useCallback((file: File): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const saveData = JSON.parse(content);
-          
-          // Validate the save data structure
-          if (!saveData.objects || !Array.isArray(saveData.objects)) {
-            throw new Error('Invalid save file format: missing or invalid objects array');
-          }
-          
-          // Validate each object has required properties
-          for (const obj of saveData.objects) {
-            if (!obj.id || !obj.name || !obj.type || typeof obj.x !== 'number' || typeof obj.y !== 'number') {
-              throw new Error('Invalid save file format: objects missing required properties');
-            }
-          }
-          
-          // Clear current canvas and load new objects
-          setDrawingState(prev => ({
-            ...prev,
-            objects: saveData.objects,
-            selectedObject: null,
-            creationMode: 'none',
-            isCreating: false,
-            creationStart: null,
-            polygonVertices: []
-          }));
-          
-          resolve();
-        } catch (error) {
-          reject(new Error(`Failed to load canvas: ${error instanceof Error ? error.message : 'Unknown error'}`));
-        }
-      };
-      
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-      
-      reader.readAsText(file);
-    });
+  const getCanvasImage = useCallback((): string => {
+    if (!canvasRef.current) {
+      throw new Error('Canvas not available');
+    }
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+    const base64Data = dataUrl.split(',')[1];
+    return base64Data;
+  }, []);
+
+  // Load objects from file (used by file operations hook)
+  const loadObjects = useCallback((objects: CanvasObject[]) => {
+    setDrawingState(prev => ({
+      ...prev,
+      objects: objects,
+      selectedObject: null,
+      creationMode: 'none',
+      isCreating: false,
+      creationStart: null,
+      polygonVertices: []
+    }));
   }, []);
 
   return {
+    // State
     drawingState,
     canvasRef,
+    defaultStrokeColor,
+    defaultFillColor,
+    
+    // State setters
+    setDefaultStrokeColor,
+    setDefaultFillColor,
+    
+    // Object creation
     addRectangle,
     addCircle,
     addText,
     addPolygon,
+    
+    // Object manipulation
     modifyObject,
     deleteObject,
     reorderObject,
     clearCanvas,
-    selectObject,
     moveObject,
-    getCanvasStatus,
-    getCanvasImage,
+    
+    // Selection and UI
+    selectObject,
     setCreationMode,
     startCreation,
     updateCreation,
@@ -994,16 +387,15 @@ export const useDrawit = (appName: string) => {
     addPolygonVertex,
     finishPolygon,
     cancelCreation,
-    resizeObject,
-    rotateObject,
     startHandleInteraction,
     endHandleInteraction,
-    saveCanvas,
-    loadCanvas,
-    defaultStrokeColor,
-    defaultFillColor,
-    setDefaultStrokeColor,
-    setDefaultFillColor,
+    
+    // Status and utilities
+    getCanvasStatus,
+    getCanvasImage,
+    loadObjects,
+    
+    // Constants
     CANVAS_WIDTH,
     CANVAS_HEIGHT
   };

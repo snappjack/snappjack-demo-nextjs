@@ -5,56 +5,21 @@ import {
   RectangleObject, 
   CircleObject, 
   TextObject, 
-  PolygonObject 
+  PolygonObject,
+  RectangleParams,
+  CircleParams,
+  TextParams,
+  PolygonParams
 } from '@/app/drawit/types/drawit';
 
-interface RectangleParams {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  color?: string;
-  fillColor?: string;
-  strokeWidth?: number;
-  rotation?: number;
-  cornerRadius?: number;
-}
-
-interface CircleParams {
-  x?: number;
-  y?: number;
-  radius?: number;
-  color?: string;
-  fillColor?: string;
-  strokeWidth?: number;
-  rotation?: number;
-}
-
-interface TextParams {
-  x?: number;
-  y?: number;
-  text?: string;
-  fontSize?: number;
-  color?: string;
-  fontFamily?: string;
-  fontWeight?: string;
-  rotation?: number;
-}
-
-interface PolygonParams {
-  vertices?: Array<{ x: number; y: number }>;
-  color?: string;
-  fillColor?: string;
-  strokeWidth?: number;
-  rotation?: number;
-}
+// Parameter types now imported from shared types file
 
 interface DrawingAPI {
-  addRectangle: (params: RectangleParams) => RectangleObject;
-  addCircle: (params: CircleParams) => CircleObject;
-  addText: (params: TextParams) => TextObject;
-  addPolygon: (params: PolygonParams) => PolygonObject;
-  modifyObject: (id: string, updates: Partial<CanvasObject>) => CanvasObject;
+  addRectangle: (params: RectangleParams) => RectangleObject | null;
+  addCircle: (params: CircleParams) => CircleObject | null;
+  addText: (params: TextParams) => TextObject | null;
+  addPolygon: (params: PolygonParams) => PolygonObject | null;
+  modifyObject: (id: string, updates: Partial<CanvasObject>) => CanvasObject | null;
   deleteObject: (id: string) => void;
   reorderObject: (id: string, operation: 'up' | 'down' | 'top' | 'bottom' | 'above' | 'below', referenceId?: string) => void;
   clearCanvas: () => void;
@@ -224,7 +189,7 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
       },
       handler: async (args: unknown): Promise<ToolResponse> => {
         const params = args as Record<string, unknown>;
-        let result: CanvasObject;
+        let result: CanvasObject | null;
         
         if (params.id) {
           const { id, ...updates } = params as { id: string; [key: string]: unknown };
@@ -232,6 +197,10 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
         } else {
           const rectParams = params as unknown as RectangleParams;
           result = drawingAPI.addRectangle(rectParams);
+        }
+        
+        if (!result) {
+          throw new Error('Failed to create or modify rectangle');
         }
         
         return {
@@ -262,7 +231,7 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
       },
       handler: async (args: unknown): Promise<ToolResponse> => {
         const params = args as Record<string, unknown>;
-        let result: CanvasObject;
+        let result: CanvasObject | null;
         
         if (params.id) {
           const { id, ...updates } = params as Record<string, unknown>;
@@ -270,6 +239,10 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
         } else {
           const circleParams = params as unknown as CircleParams;
           result = drawingAPI.addCircle(circleParams);
+        }
+        
+        if (!result) {
+          throw new Error('Failed to create or modify circle');
         }
         
         return {
@@ -301,7 +274,7 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
       },
       handler: async (args: unknown): Promise<ToolResponse> => {
         const params = args as Record<string, unknown>;
-        let result: CanvasObject;
+        let result: CanvasObject | null;
         
         if (params.id) {
           const { id, ...updates } = params as Record<string, unknown>;
@@ -309,6 +282,10 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
         } else {
           const textParams = params as Record<string, unknown>;
           result = drawingAPI.addText(textParams as unknown as TextParams);
+        }
+        
+        if (!result) {
+          throw new Error('Failed to create or modify text');
         }
         
         return {
@@ -348,7 +325,7 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
       },
       handler: async (args: unknown): Promise<ToolResponse> => {
         const params = args as Record<string, unknown>;
-        let result: CanvasObject;
+        let result: CanvasObject | null;
         
         if (params.id) {
           const { id, ...updates } = params as Record<string, unknown>;
@@ -356,6 +333,10 @@ export function createSnappjackTools(drawingAPI: DrawingAPI, appName: string): T
         } else {
           const polygonParams = params as Record<string, unknown>;
           result = drawingAPI.addPolygon(polygonParams as unknown as PolygonParams);
+        }
+        
+        if (!result) {
+          throw new Error('Failed to create or modify polygon');
         }
         
         return {
