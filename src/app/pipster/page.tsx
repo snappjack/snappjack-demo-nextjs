@@ -8,9 +8,10 @@ import { createSnappjackTools } from './lib/createSnappjackTools';
 import DiceContainer from './components/DiceContainer';
 import RollerButtons from './components/RollerButtons';
 import KeepDieStatus from './components/KeepDieStatus';
-import ConnectionStatus from '@/components/ConnectionStatus';
-import AgentConfig from '@/components/AgentConfig';
-import AvailableTools from '@/components/AvailableTools';
+import { SnappjackConnectionStatus } from '@/components/snappjack/SnappjackConnectionStatus';
+import { SnappjackAgentConfig } from '@/components/snappjack/SnappjackAgentConfig';
+import { SnappjackAvailableTools } from '@/components/snappjack/SnappjackAvailableTools';
+import { SnappjackConnectionError } from '@/components/snappjack/SnappjackConnectionError';
 
 export default function DicePage() {
   const APP_NAME = 'Pipster';
@@ -102,44 +103,22 @@ export default function DicePage() {
 
         {/* Connection Error */}
         {connectionError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-5">
-            <div className="flex items-start space-x-3">
-              <div className="text-red-500 text-xl">⚠️</div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-red-800 mb-1">Connection Problem</h3>
-                <p className="text-red-700 mb-3">{connectionError.message}</p>
-                {connectionError.canResetCredentials ? (
-                  <div className="space-y-2">
-                    <p className="text-red-600 text-sm">
-                      Your credentials may be invalid. Try getting new credentials:
-                    </p>
-                    <button
-                      onClick={resetCredentials}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
-                    >
-                      Get New Credentials
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-red-600 text-sm">
-                    {connectionError.type === 'server_unreachable' 
-                      ? 'The server may be down. Please wait and the app will retry automatically.' 
-                      : 'Please check your connection and try refreshing the page.'}
-                  </p>
-                )}
-              </div>
-            </div>
+          <div className="mb-5">
+            <SnappjackConnectionError 
+              error={connectionError} 
+              onResetCredentials={resetCredentials} 
+            />
           </div>
         )}
 
         {/* Connection Status */}
-        <ConnectionStatus status={status} appName={APP_NAME} appEmoji={APP_EMOJI} />
+        <SnappjackConnectionStatus status={status} appName={APP_NAME} appEmoji={APP_EMOJI} />
 
         {/* Available Tools - only show when agent is connected (bridged) */}
-        {status === 'bridged' && <AvailableTools tools={availableTools} />}
+        {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />}
 
         {/* Agent Configuration */}
-        <AgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} />
+        <SnappjackAgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} />
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { ConnectionStatusProps } from '@/app/pipster/types/pipster';
 
-export default function ConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲' }: ConnectionStatusProps) {
+export function SnappjackConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲' }: ConnectionStatusProps) {
   const getLineColor = (line: 'agent' | 'app') => {
     if (line === 'agent') {
       return status === 'bridged' ? 'bg-green-500' : status === 'connected' ? 'bg-red-500' : 'bg-gray-300';

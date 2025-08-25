@@ -2,11 +2,11 @@
 
 import { Tool } from '@snappjack/sdk-js';
 
-interface AvailableToolsProps {
+interface SnappjackAvailableToolsProps {
   tools: Tool[];
 }
 
-export default function AvailableTools({ tools }: AvailableToolsProps) {
+export function SnappjackAvailableTools({ tools }: SnappjackAvailableToolsProps) {
   if (!tools || tools.length === 0) {
     return null;
   }

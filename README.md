@@ -32,8 +32,8 @@ cd snappjack-demo-nextjs
 npm install
 
 # Create .env file with your credentials
-echo "NEXT_PUBLIC_SNAPPJACK_SNAPP_ID=your-app-id" > .env
-echo "SNAPPJACK_SNAPP_API_KEY=your-api-key" >> .env
+cp .env.example .env
+# Edit .env and add your Pipster and DrawIt credentials
 
 # Run the development server
 npm run dev
@@ -280,12 +280,18 @@ npm run lint      # Run ESLint
 Create a `.env` file in the project root with the following:
 
 ```bash
-NEXT_PUBLIC_SNAPPJACK_SNAPP_ID=your-app-id
-SNAPPJACK_SNAPP_API_KEY=your-api-key
+# Pipster app credentials
+NEXT_PUBLIC_PIPSTER_SNAPP_ID="your-pipster-app-id"
+PIPSTER_SNAPP_API_KEY="your-pipster-api-key"
+
+# DrawIt app credentials  
+NEXT_PUBLIC_DRAWIT_SNAPP_ID="your-drawit-app-id"
+DRAWIT_SNAPP_API_KEY="your-drawit-api-key"
 ```
 
-To get your App ID and API key:
+To get your App IDs and API keys:
 - Visit [www.snappjack.com](https://www.snappjack.com) to request access
+- Create separate Snapps named "Pipster" and "DrawIt"
 - Or email hello@snappjack.com
 
 The app uses these credentials to:

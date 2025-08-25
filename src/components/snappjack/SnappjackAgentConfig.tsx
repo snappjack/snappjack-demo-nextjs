@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AgentConfigProps } from '@/app/pipster/types/pipster';
 
-export default function AgentConfig({ connectionData, appName }: AgentConfigProps) {
+export function SnappjackAgentConfig({ connectionData, appName }: AgentConfigProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   if (!connectionData) return null;
