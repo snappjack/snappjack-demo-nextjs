@@ -50,212 +50,160 @@ src/
 │   ├── layout.tsx         # Root layout with header/footer
 │   ├── pipster/           # Pipster Snapp - Dice game
 │   │   ├── hooks/
-│   │   │   ├── usePipster.ts    # Game logic
-│   │   │   └── useSnappjack.ts  # Snappjack integration
-│   │   └── components/
+│   │   │   └── usePipster.ts         # Game state management
+│   │   ├── lib/
+│   │   │   └── createSnappjackTools.ts # MCP tool factory
+│   │   ├── components/               # UI components
+│   │   └── types/
 │   └── drawit/            # DrawIt Snapp - Canvas drawing
 │       ├── hooks/
-│       │   ├── useDrawit.ts     # Drawing logic
-│       │   └── useSnappjack.ts  # Snappjack integration
-│       └── components/
-├── components/
-│   ├── layout/            # Shared layout components
-│   └── *.tsx              # Shared Snappjack UI components
-└── contexts/
-    └── SnappjackCredentialsContext.tsx  # API key management
+│       │   ├── useDrawit.ts          # Drawing state management
+│       │   ├── useFileOperations.ts  # Specialized functionality
+│       │   └── useCanvasInteraction.ts
+│       ├── lib/
+│       │   ├── DrawingEngine.ts      # Business logic class
+│       │   ├── createSnappjackTools.ts # MCP tool factory
+│       │   ├── constants.ts          # App constants
+│       │   ├── validation.ts         # Validation utilities
+│       │   └── geometry.ts           # Utility functions
+│       ├── components/               # UI components
+│       └── types/
+├── hooks/                 # Shared hooks
+│   ├── useSnappjackConnection.ts     # Shared connection management
+│   └── useSnappjackCredentials.ts    # Credential management
+└── components/
+    ├── layout/            # Shared layout components
+    └── snappjack/         # Snappjack-specific UI components
+        ├── SnappjackConnectionStatus.tsx
+        ├── SnappjackAgentConfig.tsx
+        ├── SnappjackAvailableTools.tsx
+        └── SnappjackConnectionError.tsx
 ```
 
 ## 🏗️ Architecture Overview
 
-### Core Concepts
+### The Snapp Design Pattern
 
-1. **Snappjack Hook Pattern**: Each Snapp uses a custom `useSnappjack` hook that:
-   - Establishes WebSocket connection to Snappjack bridge
-   - Registers tools that AI agents can call
-   - Handles connection lifecycle and errors
+A **Snapp** (Snappjack-enabled app) implements a **dual-interface architecture** that serves both human users and AI agents:
 
-2. **Tool Registration**: Tools are functions that agents can invoke. All tool definitions and responses must follow the [MCP Tools Specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools):
-   ```typescript
-   const tools = [
-     {
-       name: 'get_state',
-       description: 'Get current app state',
-       inputSchema: {
-         type: 'object',
-         properties: {}
-       },
-       handler: () => ({ 
-         content: [{ 
-           type: 'text',
-           text: JSON.stringify(state) 
-         }] 
-       })
-     }
-   ];
-   ```
+- **Human Interface**: Traditional React components and UI interactions
+- **Agent Interface**: MCP (Model Context Protocol) tools that provide the same functionality programmatically
 
-3. **State Management**: Use `useRef` to avoid stale closures in tool handlers:
-   ```typescript
-   const stateRef = useRef(state);
-   stateRef.current = state; // Keep ref updated
-   
-   // Tool handlers access current state via ref
-   const handler = () => stateRef.current;
-   ```
+### Core Architectural Layers
+
+1. **Business Logic Layer**: Pure application logic independent of React or MCP
+   - Contains core app functionality and business rules
+   - Examples: `DrawingEngine.ts` for canvas operations, dice game logic for Pipster
+   - No dependencies on React hooks or MCP protocol
+
+2. **State Management Layer**: React hooks that manage UI state and provide clean APIs
+   - App-specific hooks like `useDrawit()` and `usePipster()`
+   - Uses `useRef` pattern to prevent stale closures in tool handlers
+   - Provides stable API methods that work for both UI and agent interactions
+
+3. **Tool Factory Layer**: Creates MCP tools from app APIs
+   - Factory functions like `createSnappjackTools()` that generate agent tools
+   - Separates MCP protocol concerns from React state management
+   - Transforms app API calls into MCP-compliant tool responses
+
+4. **Connection Layer**: Shared Snappjack WebSocket management
+   - `useSnappjackConnection()` hook handles WebSocket lifecycle
+   - `useSnappjackCredentials()` manages authentication
+   - Shared across all Snapps for consistency
+
+### Key Benefits of This Pattern
+
+- **Separation of Concerns**: Business logic, React state, and MCP protocol are decoupled
+- **Testability**: Each layer can be tested independently
+- **Reusability**: Connection and credential management are shared across all Snapps
+- **Consistency**: Same functionality accessible through both human and agent interfaces
 
 ## 🎯 Creating Your Own Snapp
 
-### Step 1: Create Your Snapp Logic Hook
+Follow the **dual-interface architecture pattern** demonstrated in the Pipster and DrawIt examples:
 
-Create a hook that manages your Snapp's state and functionality:
+### Step 1: Business Logic Layer (Recommended for Complex Apps)
 
-```typescript
-// hooks/useMyApp.ts
-export function useMyApp() {
-  const [message, setMessage] = useState('Hello World');
-  const messageRef = useRef(message);
-  messageRef.current = message;
+Create pure business logic classes or functions that contain your app's core functionality without any React or MCP dependencies. See `DrawingEngine.ts` as an example of this pattern.
 
-  const updateMessage = (text: string) => {
-    setMessage(text);
-  };
+### Step 2: State Management Layer
 
-  const getCurrentState = () => ({
-    message: messageRef.current,
-    timestamp: new Date().toISOString()
-  });
+Build an app-specific React hook that manages UI state and provides a clean API. Key patterns:
+- Use `useState` for React state management
+- Use `useRef` pattern to prevent stale closures in tool handlers  
+- Provide stable API methods that work for both UI interactions and agent tool calls
+- Examples: `useDrawit()` and `usePipster()` hooks
 
-  return {
-    message,
-    updateMessage,
-    getCurrentState
-  };
-}
-```
+### Step 3: Tool Factory Layer
 
-### Step 2: Create Snappjack Integration Hook
+Create a factory function that generates MCP tools from your app API:
+- Place in `lib/createSnappjackTools.ts` following the established pattern
+- Transform app API methods into MCP-compliant tool definitions
+- Handle input validation and error responses
+- Ensure tool descriptions clearly explain functionality for AI agents
 
-Connect your Snapp to Snappjack by registering tools that follow the [MCP Tools Specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools):
+### Step 4: Page Component Integration  
 
-```typescript
-// hooks/useSnappjack.ts
-import { useSnappjack as useSnappjackSDK } from '@snappjack/sdk-js';
-
-export function useSnappjack({ getCurrentState, updateMessage }) {
-  const tools = [
-    {
-      name: 'get_message',
-      description: 'Get the current message',
-      inputSchema: { 
-        type: 'object', 
-        properties: {},
-        required: []
-      },
-      handler: async () => ({
-        content: [{ 
-          type: 'text',
-          text: getCurrentState().message 
-        }]
-      })
-    },
-    {
-      name: 'set_message',
-      description: 'Set a new message',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          text: { type: 'string', description: 'New message text' }
-        },
-        required: ['text']
-      },
-      handler: async (input) => {
-        updateMessage(input.text);
-        return { 
-          content: [{ 
-            type: 'text',
-            text: `Message updated to: ${input.text}` 
-          }] 
-        };
-      }
-    }
-  ];
-
-  return useSnappjackSDK({
-    snappId: 'my-hello-world',
-    appName: 'Hello World App',
-    tools
-  });
-}
-```
-
-**Note**: The `content` array in tool responses must follow MCP format with `type` and `text` properties.
-
-### Step 3: Build Your UI Component
-
-```typescript
-// app/hello/page.tsx
-'use client';
-
-import { useMyApp } from './hooks/useMyApp';
-import { useSnappjack } from './hooks/useSnappjack';
-
-export default function HelloPage() {
-  const { message, updateMessage, getCurrentState } = useMyApp();
-  const { status, connectionData } = useSnappjack({
-    getCurrentState,
-    updateMessage
-  });
-
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">Hello World App</h1>
-      <p className="text-xl mb-4">{message}</p>
-      <input
-        type="text"
-        value={message}
-        onChange={(e) => updateMessage(e.target.value)}
-        className="border p-2 rounded"
-      />
-      {status === 'bridged' && (
-        <p className="mt-4 text-green-600">✅ Agent connected!</p>
-      )}
-    </div>
-  );
-}
-```
+Connect all layers in your page component:
+- Use your app-specific hook for core functionality
+- Use shared `useSnappjackCredentials` and `useSnappjackConnection` hooks
+- Include standard Snappjack UI components for connection status and agent configuration
+- Ensure the same functionality is accessible through both human GUI and agent tools
 
 ## 🤖 Using Claude Code to Build Snapps
 
-[Claude Code](https://claude.ai/code) can help you rapidly prototype and build Snapps. Here's an example prompt to get started:
+[Claude Code](https://claude.ai/code) can help you rapidly prototype and build Snapps by referencing the existing implementations as examples.
+
+### Creating a Snapp with Claude Code
+
+When building a new Snapp, follow this approach:
+
+1. **Reference Architecture**: Point to Pipster and DrawIt as examples of the dual-interface pattern
+2. **Define Agent Tools**: List what actions agents need (add todo, mark complete, delete, etc.)
+3. **Request Layer Structure**: Ask for business logic, state management, tool factory, and UI layers
+4. **Specify Components**: Request use of existing Snappjack UI components for consistency
 
 ### Example Prompt for a Todo List Snapp
 
+Here's a complete prompt you can use with Claude Code to create a new Todo List Snapp:
+
 ```
-Create a new Snappjack-enabled todo list Snapp in the Next.js project. The Snapp should:
+I want to create a Todo List Snapp following the architecture pattern used in Pipster and DrawIt. 
 
-1. Allow users to add, complete, and delete todos through the UI
-2. Expose these tools to AI agents:
-   - get_todos: Return all todos with their status
-   - add_todo: Add a new todo item
-   - complete_todo: Mark a todo as complete
-   - delete_todo: Remove a todo
+First, examine the existing Pipster and DrawIt implementations to understand the dual-interface architecture pattern, then create a new Todo List Snapp with these requirements:
 
-Follow the existing pattern from the Pipster and DrawIt Snapps:
-- Create the Snapp in src/app/todos/
-- Use a useTodos hook for state management
-- Use useSnappjack hook for agent integration
-- Use useRef to avoid stale closures in tool handlers
-- Include ConnectionStatus and AgentConfig components
+**Human Interface:**
+- Add new todos with text input and priority levels
+- Mark todos as complete/incomplete with checkboxes
+- Delete todos with delete buttons
+- Filter todos by status (all, active, completed)
+- Clear all completed todos
+- Display todo count and completion stats
 
-The UI should be clean and simple with Tailwind CSS styling.
+**Agent Tools (MCP interface):**
+- `todolist_system_get` - Get system documentation and current state
+- `todolist_todo_add` - Add new todo with text, priority (low/medium/high), and optional due date
+- `todolist_todo_update` - Update existing todo (text, priority, due date, completion status)
+- `todolist_todo_delete` - Delete todo by ID
+- `todolist_todos_clear_completed` - Clear all completed todos
+- `todolist_todos_get` - Get current todo list with filtering options
+
+**Architecture Requirements:**
+- Follow the same 4-layer pattern: business logic → state management → tool factory → UI integration
+- Use the existing Snappjack UI components (SnappjackConnectionStatus, SnappjackAgentConfig, etc.)
+- Place in `src/app/todolist/` following the established directory structure
+- Create types in `types/todolist.ts`
+- Use `useRef` pattern in hooks to prevent stale closures
+- Set up environment variables for TODOLIST_SNAPP_ID and API key
+
+**Implementation Details:**
+- Todo items should have: id, text, completed boolean, priority, createdAt, completedAt, optional dueDate
+- State should track: todos array, filter mode, and any UI state
+- Tools should return structured data that agents can easily parse
+- Include comprehensive system documentation in the tool factory
+
+Please create all necessary files and ensure the Todo List Snapp follows the exact same patterns as Pipster and DrawIt for consistency.
 ```
-
-### Tips for Working with Claude Code
-
-1. **Reference Existing Patterns**: Point Claude to existing Snapps (Pipster/DrawIt) as examples
-2. **Be Specific About Tools**: Clearly describe what tools agents should have access to
-3. **Request Error Handling**: Ask for proper error handling and connection management
-4. **Iterate Quickly**: Start simple and add features incrementally
 
 ## 🔧 Development Commands
 
