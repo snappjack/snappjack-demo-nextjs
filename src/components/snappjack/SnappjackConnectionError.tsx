@@ -1,3 +1,5 @@
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+
 interface SnappjackConnectionErrorProps {
   error: {
     type: string;
@@ -11,7 +13,7 @@ export function SnappjackConnectionError({ error, onResetCredentials }: Snappjac
   return (
     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
       <div className="flex items-start space-x-3">
-        <div className="text-red-500 text-xl">⚠️</div>
+        <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
         <div className="flex-1">
           <h3 className="font-semibold text-red-800 mb-1">Connection Problem</h3>
           <p className="text-red-700 mb-3">{error.message}</p>

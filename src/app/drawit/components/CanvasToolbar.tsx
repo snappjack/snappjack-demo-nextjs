@@ -1,6 +1,12 @@
 'use client';
 
 import { CreationMode } from '@/app/drawit/types/drawit';
+import {
+  CursorArrowRaysIcon
+} from '@heroicons/react/24/outline';
+import { RoundedSquareIcon } from '@/components/icons/RoundedSquareIcon';
+import { TextBoxIcon } from '@/components/icons/TextBoxIcon';
+import { PolygonIcon } from '@/components/icons/PolygonIcon';
 
 interface CanvasToolbarProps {
   currentMode: CreationMode;
@@ -28,33 +34,37 @@ export default function CanvasToolbar({
   const tools = [
     { 
       id: 'none', 
-      icon: '👆', 
+      icon: <CursorArrowRaysIcon className="w-5 h-5" />, 
       title: 'Select' 
     },
     { 
       id: 'rectangle', 
-      icon: '⬜', 
+      icon: <RoundedSquareIcon className="w-5 h-5" />, 
       title: 'Rectangle' 
     },
     { 
       id: 'circle', 
-      icon: '⭕', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      ), 
       title: 'Circle' 
     },
     { 
-      id: 'text', 
-      icon: '📝', 
-      title: 'Text' 
+      id: 'polygon', 
+      icon: <PolygonIcon className="w-5 h-5" />, 
+      title: 'Polygon' 
     },
     { 
-      id: 'polygon', 
-      icon: '🔶', 
-      title: 'Polygon' 
+      id: 'text', 
+      icon: <TextBoxIcon className="w-5 h-5" />, 
+      title: 'Text' 
     },
   ] as const;
 
   return (
-    <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg border">
+    <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
         {/* Creation tools */}
         <div className="flex items-center gap-2">
@@ -70,7 +80,7 @@ export default function CanvasToolbar({
               }
             `}
           >
-            <span className="text-lg">{tool.icon}</span>
+            {tool.icon}
             
             {/* Tooltip */}
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">

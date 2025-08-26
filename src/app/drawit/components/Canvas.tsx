@@ -563,8 +563,10 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = pixelToPercentX(e.clientX - rect.left);
-    const y = pixelToPercentY(e.clientY - rect.top);
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
+    const x = pixelToPercentX((e.clientX - rect.left) * scaleX);
+    const y = pixelToPercentY((e.clientY - rect.top) * scaleY);
 
     // Handle creation modes
     if (creationMode !== 'none') {
@@ -615,8 +617,10 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = pixelToPercentX(e.clientX - rect.left);
-    const y = pixelToPercentY(e.clientY - rect.top);
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
+    const x = pixelToPercentX((e.clientX - rect.left) * scaleX);
+    const y = pixelToPercentY((e.clientY - rect.top) * scaleY);
 
     // Update current mouse position for creation preview
     setCurrentMousePos({ x, y });
@@ -659,8 +663,10 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-      const x = pixelToPercentX(e.clientX - rect.left);
-      const y = pixelToPercentY(e.clientY - rect.top);
+      const scaleX = width / rect.width;
+      const scaleY = height / rect.height;
+      const x = pixelToPercentX((e.clientX - rect.left) * scaleX);
+      const y = pixelToPercentY((e.clientY - rect.top) * scaleY);
       
       onFinishCreation(x, y);
     }
@@ -697,16 +703,18 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   };
 
   return (
-    <div className="relative">
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className={`border-2 border-gray-300 rounded-lg bg-white ${getCursorStyle()}`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      />
+    <div className="relative flex justify-center">
+      <div className="relative max-w-full" style={{ aspectRatio: `${width}/${height}` }}>
+        <canvas
+          ref={canvasRef}
+          width={width}
+          height={height}
+          className={`border-2 border-gray-300 rounded-lg bg-white w-full h-auto ${getCursorStyle()}`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        />
+      </div>
 
       {/* Text Input Modal */}
       {showTextInput && textInputPos && (

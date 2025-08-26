@@ -1,6 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { 
+  PaintBrushIcon,
+  CheckIcon,
+  UserIcon,
+  SparklesIcon,
+  PlayIcon,
+  LockClosedIcon
+} from '@heroicons/react/24/outline';
+import { DiceIcon } from '@/components/icons/DiceIcon';
+import { ChatbotIcon } from '@/components/icons/ChatbotIcon';
 
 export default function Home() {
   const handleEmailRequest = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -11,7 +21,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-5 py-16">
         <div className="text-center">
@@ -41,7 +51,7 @@ export default function Home() {
           {/* Pipster Card */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
             <div className="p-8">
-              <div className="text-4xl mb-4">🎲</div>
+              <DiceIcon className="w-10 h-10 mb-4 text-purple-600" />
               <h3 className="text-2xl font-bold mb-3 text-gray-800">Pipster</h3>
               <p className="text-gray-600 mb-6">
                 A dice game where AI agents can roll, keep, and strategize alongside human players
@@ -49,13 +59,16 @@ export default function Home() {
               
               <div className="space-y-2 mb-6">
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">✓</span> Roll and keep dice
+                  <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Roll and keep dice</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">✓</span> Strategic decision making
+                  <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Strategic decision making</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">✓</span> Real-time state synchronization
+                  <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Real-time state synchronization</span>
                 </div>
               </div>
               
@@ -71,7 +84,7 @@ export default function Home() {
           {/* DrawIt Card */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
             <div className="p-8">
-              <div className="text-4xl mb-4">🎨</div>
+              <PaintBrushIcon className="w-10 h-10 mb-4 text-blue-600" />
               <h3 className="text-2xl font-bold mb-3 text-gray-800">DrawIt</h3>
               <p className="text-gray-600 mb-6">
                 A canvas app where AI agents can create visual content, draw shapes, and compose scenes
@@ -79,13 +92,16 @@ export default function Home() {
               
               <div className="space-y-2 mb-6">
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">✓</span> Draw shapes and text
+                  <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Draw shapes and text</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">✓</span> Manipulate objects
+                  <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Manipulate objects</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">✓</span> Export canvas images
+                  <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Export canvas images</span>
                 </div>
               </div>
               
@@ -115,7 +131,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-6 shadow-md">
               <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                <span className="text-2xl">👤</span>
+                <UserIcon className="w-6 h-6 text-purple-600" />
               </div>
               <h3 className="font-bold text-lg mb-2">1. Use the GUI</h3>
               <p className="text-gray-600">
@@ -126,7 +142,7 @@ export default function Home() {
 
             <div className="bg-white rounded-xl p-6 shadow-md">
               <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                <span className="text-2xl">🤖</span>
+                <ChatbotIcon className="w-6 h-6 text-purple-600" />
               </div>
               <h3 className="font-bold text-lg mb-2">2. Connect an AI Agent</h3>
               <p className="text-gray-600">
@@ -137,7 +153,7 @@ export default function Home() {
 
             <div className="bg-white rounded-xl p-6 shadow-md">
               <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                <span className="text-2xl">✨</span>
+                <SparklesIcon className="w-6 h-6 text-purple-600" />
               </div>
               <h3 className="font-bold text-lg mb-2">3. Collaborate with AI</h3>
               <p className="text-gray-600">
@@ -150,7 +166,7 @@ export default function Home() {
           <div className="mt-12 bg-white rounded-xl p-8 shadow-md">
             <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
               <div className="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mb-6">
-                <span className="text-4xl">▶️</span>
+                <PlayIcon className="w-10 h-10 text-purple-600" />
               </div>
               <h3 className="font-bold text-2xl mb-3 text-gray-800">
                 See Snapps in Action
@@ -238,7 +254,7 @@ export default function Home() {
       {/* Early Access Notice */}
       <section className="max-w-6xl mx-auto px-5 py-12">
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-8 text-center border border-purple-200">
-          <div className="text-2xl mb-3">🔒</div>
+          <LockClosedIcon className="w-8 h-8 mb-3 mx-auto text-purple-600" />
           <h3 className="text-xl font-bold mb-2 text-gray-800">
             Snappjack is in Restricted Early Access
           </h3>

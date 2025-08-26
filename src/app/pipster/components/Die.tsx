@@ -1,6 +1,7 @@
 'use client';
 
 import { DieProps } from '@/app/pipster/types/pipster';
+import { CheckIcon } from '@heroicons/react/24/solid';
 
 export default function Die({ value, isKept, isRolling, index, onClick }: DieProps) {
   const handleClick = () => {
@@ -27,7 +28,7 @@ export default function Die({ value, isKept, isRolling, index, onClick }: DiePro
       </div>
       {isKept && (
         <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">
-          ✓
+          <CheckIcon className="w-3 h-3" />
         </div>
       )}
     </div>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { AgentConfigProps } from '@/app/pipster/types/pipster';
+import { ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ChatbotIcon } from '@/components/icons/ChatbotIcon';
 
 export function SnappjackAgentConfig({ connectionData, appName }: AgentConfigProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -52,7 +54,10 @@ export function SnappjackAgentConfig({ connectionData, appName }: AgentConfigPro
 
   return (
     <div className="mt-10 p-5 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-      <h3 className="text-xl font-bold text-blue-900 mb-4">🤖 Connect Your AI Agent</h3>
+      <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+        <ChatbotIcon className="w-6 h-6" />
+        Connect Your AI Agent
+      </h3>
       <p className="text-gray-700 mb-5">Use any of the following methods to connect an AI agent to this live session:</p>
 
       {/* Method 1: Direct Connection Parameters */}
@@ -73,7 +78,7 @@ export function SnappjackAgentConfig({ connectionData, appName }: AgentConfigPro
               onClick={() => copyToClipboard(connectionData.mcpEndpoint, 'url')}
               className="ml-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded transition-colors"
             >
-              {copiedField === 'url' ? '✓' : '📋'}
+              {copiedField === 'url' ? <CheckIcon className="w-4 h-4" /> : <ClipboardIcon className="w-4 h-4" />}
             </button>
           </div>
         </div>
@@ -91,7 +96,7 @@ export function SnappjackAgentConfig({ connectionData, appName }: AgentConfigPro
               onClick={() => copyToClipboard(connectionData.userApiKey, 'key')}
               className="ml-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded transition-colors"
             >
-              {copiedField === 'key' ? '✓' : '📋'}
+              {copiedField === 'key' ? <CheckIcon className="w-4 h-4" /> : <ClipboardIcon className="w-4 h-4" />}
             </button>
           </div>
         </div>

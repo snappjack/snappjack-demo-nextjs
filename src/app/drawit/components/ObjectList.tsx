@@ -2,6 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/app/drawit/types/drawit';
+import {
+  ArrowUpIcon,
+  ArrowDownIcon,
+  XMarkIcon,
+  FolderOpenIcon,
+  DocumentArrowDownIcon
+} from '@heroicons/react/24/outline';
 
 interface ObjectListProps {
   objects: CanvasObject[];
@@ -204,7 +211,7 @@ export default function ObjectList({
                       className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Move up"
                     >
-                      ↑
+                      <ArrowUpIcon className="w-3 h-3" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -215,7 +222,7 @@ export default function ObjectList({
                       className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Move down"
                     >
-                      ↓
+                      <ArrowDownIcon className="w-3 h-3" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -225,7 +232,7 @@ export default function ObjectList({
                       className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-600 rounded"
                       title="Delete"
                     >
-                      ✕
+                      <XMarkIcon className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -241,16 +248,18 @@ export default function ObjectList({
           <button
             onClick={handleSave}
             disabled={objects.length === 0}
-            className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+            className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
           >
-            💾 Save
+            <DocumentArrowDownIcon className="w-4 h-4" />
+            Save
           </button>
           <button
             onClick={handleLoadClick}
             disabled={isLoading}
-            className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+            className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
           >
-            {isLoading ? '📂 Loading...' : '📂 Load'}
+            <FolderOpenIcon className="w-4 h-4" />
+            {isLoading ? 'Loading...' : 'Load'}
           </button>
         </div>
         

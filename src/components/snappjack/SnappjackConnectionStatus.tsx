@@ -2,8 +2,10 @@
 
 import Image from 'next/image';
 import { ConnectionStatusProps } from '@/app/pipster/types/pipster';
+import { ChatbotIcon } from '@/components/icons/ChatbotIcon';
+import { ReactElement } from 'react';
 
-export function SnappjackConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲' }: ConnectionStatusProps) {
+export function SnappjackConnectionStatus({ status, appName = 'Pipster', appEmoji = '🎲', appIcon }: ConnectionStatusProps & { appIcon?: ReactElement }) {
   const getLineColor = (line: 'agent' | 'app') => {
     if (line === 'agent') {
       return status === 'bridged' ? 'bg-green-500' : status === 'connected' ? 'bg-red-500' : 'bg-gray-300';
@@ -19,7 +21,7 @@ export function SnappjackConnectionStatus({ status, appName = 'Pipster', appEmoj
         {/* Agent */}
         <div className="text-center p-2">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-2 border-2 border-gray-300">
-            <span className="text-3xl">🤖</span>
+            <ChatbotIcon className="w-10 h-10 text-gray-600" />
           </div>
           <div className="text-sm font-medium text-gray-600">Agent</div>
         </div>
@@ -62,7 +64,7 @@ export function SnappjackConnectionStatus({ status, appName = 'Pipster', appEmoj
         {/* App */}
         <div className="text-center p-2">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-2 border-2 border-gray-300">
-            <span className="text-3xl">{appEmoji}</span>
+            {appIcon || <span className="text-3xl">{appEmoji}</span>}
           </div>
           <div className="text-sm font-medium text-gray-600">{appName}</div>
         </div>

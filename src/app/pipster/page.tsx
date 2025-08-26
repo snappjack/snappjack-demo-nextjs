@@ -2,9 +2,11 @@
 
 import { useMemo } from 'react';
 import { usePipster } from './hooks/usePipster';
+import { DiceIcon } from '@/components/icons/DiceIcon';
 import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
 import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
 import { createSnappjackTools } from './lib/createSnappjackTools';
+import { useSetConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import DiceContainer from './components/DiceContainer';
 import RollerButtons from './components/RollerButtons';
 import KeepDieStatus from './components/KeepDieStatus';
@@ -15,7 +17,7 @@ import { SnappjackConnectionError } from '@/components/snappjack/SnappjackConnec
 
 export default function DicePage() {
   const APP_NAME = 'Pipster';
-  const APP_EMOJI = '🎲';
+  const APP_EMOJI = '🎲'; // Keep for logs
   
   // Dice game functionality
   const {
@@ -57,6 +59,9 @@ export default function DicePage() {
     onConnectionError: setConnectionError
   });
 
+  // Update header connection status
+  useSetConnectionStatus(status, APP_NAME, connectionData, availableTools);
+
   const isRollDisabled = gameState.keptDice.filter(kept => kept).length === 5;
 
   return (
@@ -69,8 +74,9 @@ export default function DicePage() {
               Snappjack Demo App
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            {APP_EMOJI} {APP_NAME} - Agentic Dice
+          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2">
+            <DiceIcon className="w-8 h-8" />
+            {APP_NAME} - Agentic Dice
           </h1>
           <p className="text-center text-gray-600 max-w-2xl mx-auto leading-relaxed">
             A simple app demonstrating how web applications can provide both a traditional GUI for
@@ -112,7 +118,12 @@ export default function DicePage() {
         )}
 
         {/* Connection Status */}
-        <SnappjackConnectionStatus status={status} appName={APP_NAME} appEmoji={APP_EMOJI} />
+        <SnappjackConnectionStatus 
+          status={status} 
+          appName={APP_NAME} 
+          appEmoji={APP_EMOJI}
+          appIcon={<DiceIcon className="w-10 h-10 text-purple-600" />}
+        />
 
         {/* Available Tools - only show when agent is connected (bridged) */}
         {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />}

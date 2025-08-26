@@ -2,11 +2,13 @@
 
 import { useMemo } from 'react';
 import { useDrawit } from './hooks/useDrawit';
+import { PaintBrushIcon } from '@heroicons/react/24/outline';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useCanvasInteraction } from './hooks/useCanvasInteraction';
 import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
 import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
 import { createSnappjackTools } from './lib/createSnappjackTools';
+import { useSetConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import Canvas from './components/Canvas';
 import ObjectList from './components/ObjectList';
 import CanvasToolbar from './components/CanvasToolbar';
@@ -18,7 +20,7 @@ import { SnappjackAvailableTools } from '@/components/snappjack/SnappjackAvailab
 
 export default function DrawItPage() {
   const APP_NAME = 'DrawIt';
-  const APP_EMOJI = '🎨';
+  const APP_EMOJI = '🎨'; // Keep for logs
   
   // Drawing functionality
   const {
@@ -98,6 +100,8 @@ export default function DrawItPage() {
     onConnectionError: setConnectionError
   });
 
+  // Update header connection status
+  useSetConnectionStatus(status, APP_NAME, connectionData, availableTools);
 
   return (
     <div className="bg-gray-100 py-8">
@@ -109,8 +113,9 @@ export default function DrawItPage() {
               Snappjack Demo App
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            {APP_EMOJI} {APP_NAME} - Agentic Canvas
+          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2">
+            <PaintBrushIcon className="w-8 h-8" />
+            {APP_NAME} - Agentic Canvas
           </h1>
           <p className="text-center text-gray-600 max-w-2xl mx-auto leading-relaxed">
             A canvas drawing app demonstrating how AI agents can create and manipulate visual content through{' '}
@@ -126,8 +131,6 @@ export default function DrawItPage() {
           {/* Canvas Area */}
           <div className="lg:col-span-2">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Canvas</h2>
-              
               {/* Canvas Toolbar */}
               <CanvasToolbar
                 currentMode={drawingState.creationMode}
@@ -141,7 +144,7 @@ export default function DrawItPage() {
                 onFillColorChange={setDefaultFillColor}
               />
               
-              <div className="flex justify-center">
+              <div className="flex justify-center mt-4">
                 <Canvas
                   ref={canvasRef}
                   objects={drawingState.objects}
@@ -208,7 +211,12 @@ export default function DrawItPage() {
           )}
 
           {/* Connection Status */}
-          <SnappjackConnectionStatus status={status} appName={APP_NAME} appEmoji={APP_EMOJI} />
+          <SnappjackConnectionStatus 
+            status={status} 
+            appName={APP_NAME} 
+            appEmoji={APP_EMOJI}
+            appIcon={<PaintBrushIcon className="w-10 h-10 text-blue-600" />}
+          />
 
           {/* Available Tools - only show when agent is connected */}
           {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />}

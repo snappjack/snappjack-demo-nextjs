@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MiniConnectionStatus } from '@/components/snappjack/MiniConnectionStatus';
-import { useConnectionStatus } from '@/contexts/ConnectionStatusContext';
 
-export default function Header() {
+interface HeaderWithStatusProps {
+  connectionStatus?: 'connecting' | 'connected' | 'bridged' | 'disconnected' | 'error';
+  appName?: string;
+}
+
+export default function HeaderWithStatus({ connectionStatus, appName }: HeaderWithStatusProps) {
   const pathname = usePathname();
-  const { status, appName, connectionData, availableTools } = useConnectionStatus();
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -17,6 +20,9 @@ export default function Header() {
 
   // Determine if we're on an app page
   const isAppPage = pathname === '/pipster' || pathname === '/drawit';
+  
+  // Get the current app name from the path if not provided
+  const currentAppName = appName || (pathname === '/pipster' ? 'Pipster' : pathname === '/drawit' ? 'DrawIt' : '');
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -31,13 +37,11 @@ export default function Header() {
             </Link>
             
             {/* Mini Connection Status - only show on app pages */}
-            {isAppPage && status && (
+            {isAppPage && connectionStatus && (
               <div className="border-l border-gray-200 pl-6">
                 <MiniConnectionStatus 
-                  status={status} 
-                  appName={appName}
-                  connectionData={connectionData}
-                  availableTools={availableTools}
+                  status={connectionStatus} 
+                  appName={currentAppName}
                 />
               </div>
             )}
