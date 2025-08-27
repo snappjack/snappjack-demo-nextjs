@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/app/drawit/types/drawit';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -33,6 +34,7 @@ export default function ObjectList({
 }: ObjectListProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadStatus, setLoadStatus] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const objectRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -50,6 +52,15 @@ export default function ObjectList({
 
   const handleLoadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleClearClick = () => {
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearAll = () => {
+    onClearAll();
+    setShowClearConfirm(false);
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,7 +276,7 @@ export default function ObjectList({
         
         {objects.length > 0 && (
           <button
-            onClick={onClearAll}
+            onClick={handleClearClick}
             className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded transition-colors text-sm"
           >
             Clear All Objects
@@ -290,6 +301,18 @@ export default function ObjectList({
           {loadStatus}
         </div>
       )}
+
+      {/* Confirm Dialog for Clear All */}
+      <ConfirmDialog
+        isOpen={showClearConfirm}
+        title="Clear All Objects"
+        message="Are you sure you want to clear all objects from the canvas? This action cannot be undone."
+        confirmLabel="Clear All"
+        cancelLabel="Cancel"
+        confirmButtonClass="bg-red-500 hover:bg-red-600 text-white"
+        onConfirm={confirmClearAll}
+        onCancel={() => setShowClearConfirm(false)}
+      />
     </>
   );
 }

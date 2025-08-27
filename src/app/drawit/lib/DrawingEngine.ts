@@ -23,7 +23,8 @@ import {
 export class DrawingEngine {
   constructor(
     private defaultStrokeColor: string,
-    private defaultFillColor: string
+    private defaultFillColor: string,
+    private defaultStrokeWidth: number = 2
   ) {}
 
   addRectangle(params: RectangleParams): RectangleObject {
@@ -36,7 +37,7 @@ export class DrawingEngine {
       height = 15, 
       color = this.defaultStrokeColor, 
       fillColor = this.defaultFillColor, 
-      strokeWidth = 2, 
+      strokeWidth = this.defaultStrokeWidth, 
       rotation = 0, 
       cornerRadius = 0  
     } = params;
@@ -71,7 +72,7 @@ export class DrawingEngine {
       radius = 15, 
       color = this.defaultStrokeColor, 
       fillColor = this.defaultFillColor, 
-      strokeWidth = 2, 
+      strokeWidth = this.defaultStrokeWidth, 
       rotation = 0 
     } = params;
 
@@ -139,7 +140,7 @@ export class DrawingEngine {
       ], 
       color = this.defaultStrokeColor, 
       fillColor = this.defaultFillColor, 
-      strokeWidth = 2, 
+      strokeWidth = this.defaultStrokeWidth, 
       rotation = 0 
     } = params;
 

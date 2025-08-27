@@ -13,6 +13,14 @@ import { CanvasHandle } from '../components/Canvas';
 import { DrawingEngine } from '../lib/DrawingEngine';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../lib/constants';
 
+// LocalStorage keys
+const STORAGE_KEYS = {
+  STROKE_COLOR: 'drawit-default-stroke-color',
+  FILL_COLOR: 'drawit-default-fill-color',
+  STROKE_WIDTH: 'drawit-default-stroke-width'
+};
+
+
 export const useDrawit = () => {
   const [drawingState, setDrawingState] = useState<DrawingState>({
     objects: [],
@@ -25,8 +33,23 @@ export const useDrawit = () => {
     handleInteraction: null,
   });
 
-  const [defaultStrokeColor, setDefaultStrokeColor] = useState('#4B5563'); // Dark gray
-  const [defaultFillColor, setDefaultFillColor] = useState('#7895A1'); // Slate blue
+  // Initialize state with server-safe defaults to prevent hydration mismatch
+  const [defaultStrokeColor, setDefaultStrokeColor] = useState('#4B5563');
+  const [defaultFillColor, setDefaultFillColor] = useState('#7895A1');
+  const [defaultStrokeWidth, setDefaultStrokeWidth] = useState(2);
+  
+  // Load from localStorage after hydration
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedStrokeColor = localStorage.getItem(STORAGE_KEYS.STROKE_COLOR);
+      const storedFillColor = localStorage.getItem(STORAGE_KEYS.FILL_COLOR);
+      const storedStrokeWidth = localStorage.getItem(STORAGE_KEYS.STROKE_WIDTH);
+      
+      if (storedStrokeColor) setDefaultStrokeColor(storedStrokeColor);
+      if (storedFillColor) setDefaultFillColor(storedFillColor);
+      if (storedStrokeWidth) setDefaultStrokeWidth(parseInt(storedStrokeWidth, 10));
+    }
+  }, []);
   
   const canvasRef = useRef<CanvasHandle>(null);
   const drawingStateRef = useRef(drawingState);
@@ -36,10 +59,10 @@ export const useDrawit = () => {
     drawingStateRef.current = drawingState;
   }, [drawingState]);
 
-  // Initialize drawing engine when colors change
+  // Initialize drawing engine when default values change
   useEffect(() => {
-    drawingEngineRef.current = new DrawingEngine(defaultStrokeColor, defaultFillColor);
-  }, [defaultStrokeColor, defaultFillColor]);
+    drawingEngineRef.current = new DrawingEngine(defaultStrokeColor, defaultFillColor, defaultStrokeWidth);
+  }, [defaultStrokeColor, defaultFillColor, defaultStrokeWidth]);
 
   // Object creation methods
   const addRectangle = useCallback((params: RectangleParams) => {
@@ -211,7 +234,7 @@ export const useDrawit = () => {
               height,
               color: defaultStrokeColor,
               fillColor: defaultFillColor,
-              strokeWidth: 2,
+              strokeWidth: defaultStrokeWidth,
               cornerRadius: 0
             });
           }
@@ -228,7 +251,7 @@ export const useDrawit = () => {
               radius: radius,
               color: defaultStrokeColor,
               fillColor: defaultFillColor,
-              strokeWidth: 2
+              strokeWidth: defaultStrokeWidth
             });
           }
           break;
@@ -257,7 +280,7 @@ export const useDrawit = () => {
       creationStart: null,
       creationMode: 'none'
     }));
-  }, [addRectangle, addCircle, addText, defaultStrokeColor, defaultFillColor]);
+  }, [addRectangle, addCircle, addText, defaultStrokeColor, defaultFillColor, defaultStrokeWidth]);
 
   const finishPolygon = useCallback(() => {
     const currentState = drawingStateRef.current;
@@ -267,7 +290,7 @@ export const useDrawit = () => {
           vertices: currentState.polygonVertices,
           color: defaultStrokeColor,
           fillColor: defaultFillColor,
-          strokeWidth: 2
+          strokeWidth: defaultStrokeWidth
         });
       } catch (error) {
         console.error('Polygon creation failed:', error);
@@ -279,7 +302,7 @@ export const useDrawit = () => {
       polygonVertices: [],
       creationMode: 'none'
     }));
-  }, [addPolygon, defaultStrokeColor, defaultFillColor]);
+  }, [addPolygon, defaultStrokeColor, defaultFillColor, defaultStrokeWidth]);
 
   const addPolygonVertex = useCallback((x: number, y: number) => {
     setDrawingState(prev => ({
@@ -354,16 +377,64 @@ export const useDrawit = () => {
     }));
   }, []);
 
+  // Enhanced setters that persist to localStorage
+  const updateDefaultStrokeColor = useCallback((color: string) => {
+    setDefaultStrokeColor(color);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.STROKE_COLOR, color);
+    }
+  }, []);
+
+  const updateDefaultFillColor = useCallback((color: string) => {
+    setDefaultFillColor(color);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.FILL_COLOR, color);
+    }
+  }, []);
+
+  const updateDefaultStrokeWidth = useCallback((width: number) => {
+    setDefaultStrokeWidth(width);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.STROKE_WIDTH, width.toString());
+    }
+  }, []);
+
+  // Function to make selected object's properties the new defaults
+  const makeSelectedObjectDefaults = useCallback(() => {
+    const selected = drawingStateRef.current.selectedObject;
+    if (!selected) return;
+
+    // Update stroke color
+    if (selected.color !== defaultStrokeColor) {
+      updateDefaultStrokeColor(selected.color);
+    }
+
+    // Update fill color (for objects that have it)
+    if ('fillColor' in selected && selected.fillColor && selected.fillColor !== defaultFillColor) {
+      updateDefaultFillColor(selected.fillColor);
+    }
+
+    // Update stroke width (for objects that have it)
+    if ('strokeWidth' in selected && selected.strokeWidth && selected.strokeWidth !== defaultStrokeWidth) {
+      updateDefaultStrokeWidth(selected.strokeWidth);
+    }
+  }, [defaultStrokeColor, defaultFillColor, defaultStrokeWidth, updateDefaultStrokeColor, updateDefaultFillColor, updateDefaultStrokeWidth]);
+
   return {
     // State
     drawingState,
     canvasRef,
     defaultStrokeColor,
     defaultFillColor,
+    defaultStrokeWidth,
     
-    // State setters
-    setDefaultStrokeColor,
-    setDefaultFillColor,
+    // State setters (with localStorage persistence)
+    setDefaultStrokeColor: updateDefaultStrokeColor,
+    setDefaultFillColor: updateDefaultFillColor,
+    setDefaultStrokeWidth: updateDefaultStrokeWidth,
+    
+    // Advanced default management
+    makeSelectedObjectDefaults,
     
     // Object creation
     addRectangle,

@@ -65,10 +65,22 @@ export default function DicePage() {
   const isRollDisabled = gameState.keptDice.filter(kept => kept).length === 5;
 
   return (
-    <div className="bg-gray-100 py-8">
-      <div className="max-w-4xl mx-auto px-5">
-        {/* Game Card */}
-        <div className="bg-white p-8 rounded-lg shadow-md mb-5">
+    <div className="bg-gray-100 min-h-0 flex-1 py-8">
+      <div className="max-w-7xl mx-auto px-5">
+
+        {/* Connection Error */}
+        {connectionError && (
+          <div className="mb-5">
+            <SnappjackConnectionError 
+              error={connectionError} 
+              onResetCredentials={resetCredentials} 
+            />
+          </div>
+        )}
+
+      {/* Game Card */}
+      <div className="bg-white p-8 rounded-lg shadow-md mb-5">
+        <div className="max-w-2xl mx-auto">
           <div className="flex justify-center mb-4">
             <div className="bg-gradient-to-br from-purple-500 to-purple-700 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
               Snappjack Demo App
@@ -105,31 +117,22 @@ export default function DicePage() {
             isRollDisabled={isRollDisabled}
             isRolling={gameState.isRolling}
           />
+          </div>
         </div>
 
-        {/* Connection Error */}
-        {connectionError && (
-          <div className="mb-5">
-            <SnappjackConnectionError 
-              error={connectionError} 
-              onResetCredentials={resetCredentials} 
-            />
-          </div>
-        )}
-
         {/* Connection Status */}
-        <SnappjackConnectionStatus 
+        {/* <SnappjackConnectionStatus 
           status={status} 
           appName={APP_NAME} 
           appEmoji={APP_EMOJI}
           appIcon={<DiceIcon className="w-10 h-10 text-purple-600" />}
-        />
+        /> */}
 
         {/* Available Tools - only show when agent is connected (bridged) */}
-        {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />}
+        {/* {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />} */}
 
         {/* Agent Configuration */}
-        <SnappjackAgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} />
+        {/* <SnappjackAgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} /> */}
       </div>
     </div>
   );

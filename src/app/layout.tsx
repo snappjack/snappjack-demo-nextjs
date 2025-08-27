@@ -43,8 +43,8 @@ export default function RootLayout({
       >
         <ConnectionStatusProvider>
           <Header />
-          <main className="flex-grow">
-            {children}
+          <main className="flex-grow flex flex-col">
+              {children}
           </main>
           <Footer />
         </ConnectionStatusProvider>
