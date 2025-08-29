@@ -19,8 +19,8 @@ export default function Header() {
   const isAppPage = pathname === '/pipster' || pathname === '/drawit';
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-5 py-4">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 flex items-center h-16">
+      <div className="max-w-7xl mx-auto px-5 py-4 flex-grow">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center space-x-2">

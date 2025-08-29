@@ -186,7 +186,7 @@ export default function CanvasToolbarContainer({
   };
 
   return (
-    <div className="mb-4">
+    <div>
       <ToolbarContext.Provider value={layoutProps}>
         {orientation === 'vertical' ? (
           <VerticalToolbarLayout />

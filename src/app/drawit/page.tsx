@@ -113,108 +113,71 @@ export default function DrawItPage() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-0 flex-1 py-8">
-      <div className="max-w-7xl mx-auto px-5">
+    <div className="flex flex-col h-[calc(100vh-150px)] z-50">
+      {/* Fixed Toolbar directly below header */}
+      <div className="bg-white border-b border-gray-200 py-3 shadow-sm">
+        <CanvasToolbar
+          currentMode={drawingState.creationMode}
+          onModeChange={setCreationMode}
+          onFinishPolygon={finishPolygon}
+          onCancelCreation={cancelCreation}
+          polygonVertexCount={drawingState.polygonVertices.length}
+          strokeColor={defaultStrokeColor}
+          fillColor={defaultFillColor}
+          strokeWidth={defaultStrokeWidth}
+          onStrokeColorChange={setDefaultStrokeColor}
+          onFillColorChange={setDefaultFillColor}
+          onStrokeWidthChange={setDefaultStrokeWidth}
+          selectedObject={drawingState.selectedObject}
+          onUpdateSelectedObject={handleUpdateSelectedObject}
+          onMakeSelectedObjectDefaults={makeSelectedObjectDefaults}
+          onDeleteObject={deleteObject}
+          onReorderObject={reorderObject}
+          onSave={saveCanvas}
+          onLoad={loadCanvas}
+          onClearAll={clearCanvas}
+        />
+      </div>
 
-        {/* Connection Error */}
-        {connectionError && (
+      {/* Connection Error */}
+      {connectionError && (
+        <div className="bg-red-50 border border-red-200 p-4">
           <SnappjackConnectionError
             error={connectionError}
             onResetCredentials={resetCredentials}
           />
-        )}
-
-        {/* Header */}
-        {/* <div className="bg-white p-8 rounded-lg shadow-md mb-5">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-              Snappjack Demo App
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2">
-            <PaintBrushIcon className="w-8 h-8" />
-            {APP_NAME} - Agentic Canvas
-          </h1>
-          <p className="text-center text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            A canvas drawing app demonstrating how AI agents can create and manipulate visual content through{' '}
-            <a href="https://www.snappjack.com" target="_blank" rel="noopener" className="text-blue-500 hover:underline">
-              Snappjack
-            </a>
-            . Agents can draw shapes, add text, and compose complex scenes using MCP tools.
-          </p>
-        </div> */}
-
-        {/* Canvas Area */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          {/* Canvas Toolbar */}
-          <CanvasToolbar
-            currentMode={drawingState.creationMode}
-            onModeChange={setCreationMode}
-            onFinishPolygon={finishPolygon}
-            onCancelCreation={cancelCreation}
-            polygonVertexCount={drawingState.polygonVertices.length}
-            strokeColor={defaultStrokeColor}
-            fillColor={defaultFillColor}
-            strokeWidth={defaultStrokeWidth}
-            onStrokeColorChange={setDefaultStrokeColor}
-            onFillColorChange={setDefaultFillColor}
-            onStrokeWidthChange={setDefaultStrokeWidth}
-            selectedObject={drawingState.selectedObject}
-            onUpdateSelectedObject={handleUpdateSelectedObject}
-            onMakeSelectedObjectDefaults={makeSelectedObjectDefaults}
-            onDeleteObject={deleteObject}
-            onReorderObject={reorderObject}
-            onSave={saveCanvas}
-            onLoad={loadCanvas}
-            onClearAll={clearCanvas}
-          />
-
-          <div className="flex justify-center mt-4">
-            <Canvas
-              ref={canvasRef}
-              objects={drawingState.objects}
-              selectedObject={drawingState.selectedObject}
-              width={CANVAS_WIDTH}
-              height={CANVAS_HEIGHT}
-              creationMode={drawingState.creationMode}
-              isCreating={drawingState.isCreating}
-              creationStart={drawingState.creationStart}
-              polygonVertices={drawingState.polygonVertices}
-              handleInteraction={drawingState.handleInteraction}
-              onCanvasClick={() => selectObject(null)}
-              onObjectClick={selectObject}
-              onObjectDrag={moveObject}
-              onStartCreation={startCreation}
-              onFinishCreation={finishCreation}
-              onUpdateCreation={updateCreation}
-              onAddPolygonVertex={addPolygonVertex}
-              onResizeObject={(id, handleType, newX, newY) => resizeObject(id, handleType, newX, newY, drawingState.handleInteraction)}
-              onRotateObject={(id, mouseX, mouseY) => {
-                const obj = drawingState.objects.find(o => o.id === id);
-                if (obj) rotateObject(id, mouseX, mouseY, obj.x, obj.y);
-              }}
-              onStartHandleInteraction={startHandleInteraction}
-              onEndHandleInteraction={endHandleInteraction}
-            />
-          </div>
         </div>
+      )}
 
-        {/* Full Width Bottom Section */}
-        {/* <div className="space-y-5 mt-5"> */}
-          {/* Connection Status */}
-          {/* <SnappjackConnectionStatus
-            status={status}
-            appName={APP_NAME}
-            appEmoji={APP_EMOJI}
-            appIcon={<PaintBrushIcon className="w-10 h-10 text-blue-600" />}
-          /> */}
 
-          {/* Available Tools - only show when agent is connected */}
-          {/* {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />} */}
-
-          {/* Agent Configuration */}
-          {/* <SnappjackAgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} /> */}
-        {/* </div> */}
+      {/* Main Canvas Area - takes remaining space */}
+      <div className="flex-1 bg-gray-100 flex items-center justify-center overflow-hidden">
+        <Canvas
+          ref={canvasRef}
+          objects={drawingState.objects}
+          selectedObject={drawingState.selectedObject}
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          creationMode={drawingState.creationMode}
+          isCreating={drawingState.isCreating}
+          creationStart={drawingState.creationStart}
+          polygonVertices={drawingState.polygonVertices}
+          handleInteraction={drawingState.handleInteraction}
+          onCanvasClick={() => selectObject(null)}
+          onObjectClick={selectObject}
+          onObjectDrag={moveObject}
+          onStartCreation={startCreation}
+          onFinishCreation={finishCreation}
+          onUpdateCreation={updateCreation}
+          onAddPolygonVertex={addPolygonVertex}
+          onResizeObject={(id, handleType, newX, newY) => resizeObject(id, handleType, newX, newY, drawingState.handleInteraction)}
+          onRotateObject={(id, mouseX, mouseY) => {
+            const obj = drawingState.objects.find(o => o.id === id);
+            if (obj) rotateObject(id, mouseX, mouseY, obj.x, obj.y);
+          }}
+          onStartHandleInteraction={startHandleInteraction}
+          onEndHandleInteraction={endHandleInteraction}
+        />
       </div>
     </div>
   );

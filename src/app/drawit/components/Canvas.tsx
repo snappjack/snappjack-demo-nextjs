@@ -704,7 +704,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
 
   return (
     <div className="relative flex justify-center">
-      <div className="relative max-w-full" style={{ aspectRatio: `${width}/${height}` }}>
+      <div className="relative max-w-full max-h-[calc(100vh-220px)]" style={{ aspectRatio: `${width}/${height}` }}>
         <canvas
           ref={canvasRef}
           width={width}
