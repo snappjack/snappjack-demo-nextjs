@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { CanvasObject, RectangleObject, CircleObject, TextObject, PolygonObject } from '@/app/drawit/types/drawit';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import ConfirmDialog from './CanvasToolbar/ui/ConfirmDialog';
 import {
   ArrowUpIcon,
   ArrowDownIcon,
