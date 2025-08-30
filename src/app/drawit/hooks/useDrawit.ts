@@ -214,6 +214,30 @@ export const useDrawit = () => {
 
   const finishCreation = useCallback((x: number, y: number, text?: string) => {
     const currentState = drawingStateRef.current;
+    
+    // Special handling for text creation - doesn't use drag-to-create flow
+    if (text !== undefined && text.trim()) {
+      try {
+        addText({
+          x: x,
+          y: y,
+          text: text.trim(),
+          fontSize: 5,
+          color: defaultStrokeColor
+        });
+        
+        // Reset creation mode after text creation
+        setDrawingState(prev => ({
+          ...prev,
+          creationMode: 'none'
+        }));
+      } catch (error) {
+        console.error('Text creation failed:', error);
+      }
+      return;
+    }
+    
+    // For shapes (rectangle, circle) - require creationStart and isCreating
     if (!currentState.creationStart || !currentState.isCreating) return;
 
     const startX = currentState.creationStart.x;
@@ -256,24 +280,12 @@ export const useDrawit = () => {
           }
           break;
         }
-        case 'text': {
-          if (text && text.trim()) {
-            addText({
-              x: startX,
-              y: startY,
-              text: text.trim(),
-              fontSize: 5,
-              color: defaultStrokeColor
-            });
-          }
-          break;
-        }
       }
     } catch (error) {
       console.error('Creation failed:', error);
     }
 
-    // Reset creation state
+    // Reset creation state for shapes
     setDrawingState(prev => ({
       ...prev,
       isCreating: false,

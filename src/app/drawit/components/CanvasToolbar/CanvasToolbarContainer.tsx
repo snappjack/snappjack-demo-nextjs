@@ -1,7 +1,7 @@
 'use client';
 
 import { CreationMode, CanvasObject } from '@/app/drawit/types/drawit';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ConfirmDialog from './ui/ConfirmDialog';
 import HorizontalToolbarLayout from './layouts/HorizontalToolbarLayout';
 import VerticalToolbarLayout from './layouts/VerticalToolbarLayout';
@@ -73,6 +73,11 @@ export default function CanvasToolbarContainer({
   );
 
   const strokeWidthOptions = [1, 2, 3, 5, 8, 12, 16];
+
+  // Reset dropdown state when selected object ID changes (not when properties change)
+  useEffect(() => {
+    setOpenDropdown(null);
+  }, [selectedObject?.id]);
 
   // Canvas operation handlers
   const handleSave = () => {

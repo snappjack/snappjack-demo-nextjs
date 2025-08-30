@@ -177,6 +177,7 @@ export default function DrawItPage() {
           }}
           onStartHandleInteraction={startHandleInteraction}
           onEndHandleInteraction={endHandleInteraction}
+          onUpdateSelectedObject={handleUpdateSelectedObject}
         />
       </div>
     </div>

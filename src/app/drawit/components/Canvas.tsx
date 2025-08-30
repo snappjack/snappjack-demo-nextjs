@@ -24,6 +24,7 @@ interface CanvasProps {
   onRotateObject: (id: string, x: number, y: number) => void;
   onStartHandleInteraction: (handleType: string, x: number, y: number, object: CanvasObject) => void;
   onEndHandleInteraction: () => void;
+  onUpdateSelectedObject?: (updates: Partial<CanvasObject>) => void;
 }
 
 export interface CanvasHandle {
@@ -50,15 +51,29 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
   onResizeObject,
   onRotateObject,
   onStartHandleInteraction,
-  onEndHandleInteraction
+  onEndHandleInteraction,
+  onUpdateSelectedObject
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const isDraggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const [currentMousePos, setCurrentMousePos] = useState<{ x: number; y: number } | null>(null);
-  const [showTextInput, setShowTextInput] = useState(false);
-  const [textInputPos, setTextInputPos] = useState<{ x: number; y: number } | null>(null);
-  const [textInputValue, setTextInputValue] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingText, setEditingText] = useState<{
+    id?: string;
+    x: number;
+    y: number;
+    width: number;
+    value: string;
+    fontSize: number;
+    fontFamily: string;
+    color: string;
+    creationX?: number;  // Original click X in percentage
+    creationY?: number;  // Original click Y in percentage
+  } | null>(null);
+  const submitHandledRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
     toDataURL: (type?: string, quality?: number) => {
@@ -68,6 +83,30 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       return canvasRef.current.toDataURL(type, quality);
     }
   }), []);
+
+  // Focus textarea when it first appears
+  useEffect(() => {
+    if (isEditing && textAreaRef.current) {
+      const textArea = textAreaRef.current;
+      
+      // Focus the element
+      textArea.focus();
+      
+      // Only select text when editing existing text with content
+      if (editingText?.id && editingText.value) {
+        textArea.select();
+      }
+    }
+  }, [isEditing]); // Only run when isEditing changes
+  
+  // Auto-size textarea height when content changes
+  useEffect(() => {
+    if (isEditing && textAreaRef.current) {
+      const textArea = textAreaRef.current;
+      textArea.style.height = 'auto';
+      textArea.style.height = `${textArea.scrollHeight}px`;
+    }
+  }, [editingText?.value]); // Run when text value changes
 
   const percentToPixelX = useCallback((percent: number): number => (percent / 100) * width, [width]);
   const percentToPixelY = useCallback((percent: number): number => (percent / 100) * height, [height]);
@@ -382,6 +421,34 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     ctx.restore();
   }, [isCreating, creationStart, currentMousePos, creationMode, percentToPixelX, percentToPixelY, width, height]);
 
+  const drawTextCursor = useCallback((ctx: CanvasRenderingContext2D) => {
+    // Show text cursor when in text mode and hovering
+    if (creationMode === 'text' && currentMousePos && !isEditing) {
+      ctx.save();
+      const x = percentToPixelX(currentMousePos.x);
+      const y = percentToPixelY(currentMousePos.y);
+      const fontSize = percentToPixelY(5);
+      
+      // Draw text cursor indicator
+      ctx.strokeStyle = '#0080ff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(x, y - fontSize / 2);
+      ctx.lineTo(x, y + fontSize / 2);
+      ctx.stroke();
+      
+      // Draw "Click to type" hint
+      ctx.fillStyle = 'rgba(0, 128, 255, 0.5)';
+      ctx.font = `${fontSize * 0.4}px Arial`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('Click to type', x + 5, y + fontSize / 2 + 5);
+      
+      ctx.restore();
+    }
+  }, [creationMode, currentMousePos, isEditing, percentToPixelX, percentToPixelY]);
+
   const drawPolygonPreview = useCallback((ctx: CanvasRenderingContext2D) => {
     if (creationMode !== 'polygon' || polygonVertices.length === 0) return;
 
@@ -549,14 +616,62 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     };
 
     ctx.clearRect(0, 0, width, height);
-    objects.forEach(obj => drawObjectLocal(ctx, obj));
+    objects.forEach(obj => {
+      // Hide text object if it's being edited
+      if (editingText?.id === obj.id) return;
+      drawObjectLocal(ctx, obj);
+    });
     
     // Draw creation preview
     drawCreationPreview(ctx);
     
     // Draw polygon preview
     drawPolygonPreview(ctx);
-  }, [objects, selectedObject, width, height, percentToPixelX, percentToPixelY, drawRectangle, drawCircle, drawText, drawPolygon, drawSelectionHandles, drawCreationPreview, drawPolygonPreview]);
+    
+    // Draw text cursor indicator
+    drawTextCursor(ctx);
+  }, [objects, selectedObject, editingText, width, height, percentToPixelX, percentToPixelY, drawRectangle, drawCircle, drawText, drawPolygon, drawSelectionHandles, drawCreationPreview, drawPolygonPreview, drawTextCursor]);
+
+  const handleDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
+    const x = pixelToPercentX((e.clientX - rect.left) * scaleX);
+    const y = pixelToPercentY((e.clientY - rect.top) * scaleY);
+
+    // Check if double-clicked on a text object
+    const clickedObject = getObjectAtPoint(x, y);
+    if (clickedObject && clickedObject.type === 'text') {
+      const textObj = clickedObject as TextObject;
+      const bbox = textObj.boundingBox;
+      
+      // Calculate display coordinates and scaling
+      const canvasRect = canvas.getBoundingClientRect();
+      const canvasScale = canvasRect.width / width; // How much the canvas is scaled visually
+      
+      // Convert text object coordinates to display coordinates
+      const displayX = percentToPixelX(bbox.minX) * canvasScale;
+      const displayY = percentToPixelY(bbox.minY) * canvasScale;
+      const displayWidth = percentToPixelX(bbox.maxX - bbox.minX) * canvasScale;
+      const displayFontSize = percentToPixelY(textObj.fontSize) * canvasScale;
+      
+      // Hide the canvas text while editing
+      setIsEditing(true);
+      setEditingText({
+        id: textObj.id,
+        x: displayX, // Use display coordinates
+        y: displayY, // Use display coordinates
+        width: Math.max(displayWidth, 100), // Ensure minimum width for usability
+        value: textObj.text,
+        fontSize: displayFontSize, // Use scaled font size
+        fontFamily: textObj.fontFamily || 'Arial',
+        color: textObj.color
+      });
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -568,15 +683,47 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     const x = pixelToPercentX((e.clientX - rect.left) * scaleX);
     const y = pixelToPercentY((e.clientY - rect.top) * scaleY);
 
+    // If we're editing and user clicks somewhere else, submit current edit first
+    if (isEditing && editingText) {
+      handleTextSubmit(editingText);
+      // Don't return here - continue with normal click handling
+    }
+
     // Handle creation modes
     if (creationMode !== 'none') {
       if (creationMode === 'text') {
-        // Show text input dialog
-        setTextInputPos({ x: e.clientX, y: e.clientY });
-        setShowTextInput(true);
-        setTextInputValue('');
-        // Store the position for when text is entered
-        onStartCreation(x, y);
+        // Prevent default to stop canvas from taking focus
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Start editing new text at canvas position
+        const fontSize = percentToPixelY(5); // Default font size for internal calculations
+        const initialWidth = 200; // Initial textarea width
+        
+        // Calculate textarea position using the actual display coordinates
+        const canvasRect = canvas.getBoundingClientRect();
+        const displayClickX = e.clientX - canvasRect.left;
+        const displayClickY = e.clientY - canvasRect.top;
+        
+        // Calculate display font size based on canvas scaling
+        const canvasScale = canvasRect.width / width; // How much the canvas is scaled visually
+        const displayFontSize = fontSize * canvasScale;
+        
+        setIsEditing(true);
+        setEditingText({
+          x: displayClickX - (initialWidth / 2), // Center using display coordinates
+          y: displayClickY - (displayFontSize / 2), // Center using scaled font size
+          width: initialWidth,
+          value: '',
+          fontSize: displayFontSize, // Use scaled font size for textarea
+          fontFamily: 'Arial',
+          color: '#4B5563', // Default text color
+          // Store original percentage coordinates for accurate final positioning
+          creationX: x,
+          creationY: y
+        });
+        
+        // Don't call onStartCreation - text editing is not a drag operation
         return;
       } else if (creationMode === 'polygon') {
         // Add vertex to polygon
@@ -651,6 +798,10 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     }
   };
 
+  const handleMouseLeave = () => {
+    setCurrentMousePos(null);
+  };
+
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     // End handle interaction
     if (handleInteraction) {
@@ -687,24 +838,47 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
     }
   };
 
-  const handleTextSubmit = () => {
-    if (textInputValue.trim() && creationStart) {
-      onFinishCreation(creationStart.x, creationStart.y, textInputValue.trim());
+  const handleTextSubmit = (textData?: typeof editingText) => {
+    // Use provided textData or current editingText
+    const textToSubmit = textData || editingText;
+    
+    if (textToSubmit && textToSubmit.value.trim()) {
+      if (textToSubmit.id) {
+        // Update existing text object
+        onUpdateSelectedObject?.({
+          id: textToSubmit.id,
+          text: textToSubmit.value.trim()
+        });
+      } else {
+        // Create new text object using stored original coordinates
+        // This eliminates positioning calculation errors
+        if (textToSubmit.creationX !== undefined && textToSubmit.creationY !== undefined) {
+          onFinishCreation(textToSubmit.creationX, textToSubmit.creationY, textToSubmit.value.trim());
+        }
+      }
     }
-    setShowTextInput(false);
-    setTextInputValue('');
-    setTextInputPos(null);
+    
+    // Mark that submit has been handled
+    submitHandledRef.current = true;
+    
+    // Reset state to hide textarea
+    setIsEditing(false);
+    setEditingText(null);
+    
+    // Reset the flag after a brief delay
+    setTimeout(() => {
+      submitHandledRef.current = false;
+    }, 100);
   };
 
   const handleTextCancel = () => {
-    setShowTextInput(false);
-    setTextInputValue('');
-    setTextInputPos(null);
+    setIsEditing(false);
+    setEditingText(null);
   };
 
   return (
     <div className="relative flex justify-center">
-      <div className="relative max-w-full max-h-[calc(100vh-220px)]" style={{ aspectRatio: `${width}/${height}` }}>
+      <div ref={containerRef} className="relative max-w-full max-h-[calc(100vh-220px)]" style={{ aspectRatio: `${width}/${height}` }}>
         <canvas
           ref={canvasRef}
           width={width}
@@ -713,49 +887,66 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onDoubleClick={handleDoubleClick}
         />
-      </div>
-
-      {/* Text Input Modal */}
-      {showTextInput && textInputPos && (
-        <div 
-          className="absolute z-10 bg-white border border-gray-300 rounded-lg shadow-lg p-3"
-          style={{
-            left: textInputPos.x,
-            top: textInputPos.y,
-            transform: 'translate(-50%, -100%)'
-          }}
-        >
-          <div className="text-sm font-medium text-gray-700 mb-2">Enter text:</div>
-          <input
-            type="text"
-            value={textInputValue}
-            onChange={(e) => setTextInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleTextSubmit();
-              if (e.key === 'Escape') handleTextCancel();
+        
+        {/* Textarea overlay for WYSIWYG text editing */}
+        {isEditing && editingText && (
+          <textarea
+            ref={textAreaRef}
+            value={editingText.value}
+            onChange={(e) => {
+              setEditingText({ ...editingText, value: e.target.value });
             }}
-            className="w-48 px-2 py-1 text-sm border border-gray-300 rounded mb-2"
-            placeholder="Type your text..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.shiftKey) {
+                // Allow shift+enter for new lines
+                return;
+              }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleTextSubmit();
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                handleTextCancel();
+              }
+            }}
+            onBlur={() => {
+              // Only handle blur if submit hasn't already been handled by mouseDown
+              if (!submitHandledRef.current) {
+                // Capture the current editing text data before state potentially changes
+                const currentTextData = editingText;
+                handleTextSubmit(currentTextData);
+              }
+            }}
+            className="absolute z-10"
+            style={{
+              left: `${editingText.x}px`,
+              top: `${editingText.y}px`,
+              width: `${editingText.width}px`,
+              minWidth: '100px',
+              
+              // WYSIWYG styles - transparent background
+              background: 'transparent',
+              border: '1px dashed #0080ff',
+              outline: 'none',
+              resize: 'none',
+              overflow: 'hidden',
+              padding: '2px',
+              
+              // Text styles matching canvas text
+              fontSize: `${editingText.fontSize}px`,
+              fontFamily: editingText.fontFamily,
+              color: editingText.color,
+              lineHeight: 1.2,
+              textAlign: 'center'
+            }}
             autoFocus
           />
-          <div className="flex gap-2">
-            <button
-              onClick={handleTextSubmit}
-              className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded"
-              disabled={!textInputValue.trim()}
-            >
-              Add Text
-            </button>
-            <button
-              onClick={handleTextCancel}
-              className="px-3 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 });

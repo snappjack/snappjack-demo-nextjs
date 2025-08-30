@@ -23,22 +23,33 @@ export default function ToolbarDropdown({
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isOpen) return;
+    
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        if (isOpen) {
-          onToggle();
-        }
+        onToggle();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    // Use 'click' instead of 'mousedown' and add a small delay to avoid conflicts
+    // with the toggle button's click handler
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, [isOpen, onToggle]);
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
-        onClick={onToggle}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
         className="p-1.5 bg-white border border-gray-300 rounded hover:border-gray-400 transition-colors flex items-center justify-center group"
       >
         {trigger}
@@ -52,7 +63,10 @@ export default function ToolbarDropdown({
       
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50">
+        <div 
+          className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
           {children}
         </div>
       )}
