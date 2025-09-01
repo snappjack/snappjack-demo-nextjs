@@ -26,6 +26,9 @@ interface ConnectionStatusContextType {
     connectionData?: ConnectionData | null,
     availableTools?: Tool[]
   ) => void;
+  isConnectionModalOpen: boolean;
+  openConnectionModal: () => void;
+  closeConnectionModal: () => void;
 }
 
 const ConnectionStatusContext = createContext<ConnectionStatusContextType | undefined>(undefined);
@@ -35,6 +38,7 @@ export function ConnectionStatusProvider({ children }: { children: ReactNode }) 
   const [appName, setAppName] = useState<string>('');
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  const [isConnectionModalOpen, setIsConnectionModalOpen] = useState<boolean>(false);
 
   const setConnectionStatus = (
     newStatus: 'connecting' | 'connected' | 'bridged' | 'disconnected' | 'error' | null,
@@ -54,8 +58,20 @@ export function ConnectionStatusProvider({ children }: { children: ReactNode }) 
     }
   };
 
+  const openConnectionModal = () => setIsConnectionModalOpen(true);
+  const closeConnectionModal = () => setIsConnectionModalOpen(false);
+
   return (
-    <ConnectionStatusContext.Provider value={{ status, appName, connectionData, availableTools, setConnectionStatus }}>
+    <ConnectionStatusContext.Provider value={{ 
+      status, 
+      appName, 
+      connectionData, 
+      availableTools, 
+      setConnectionStatus,
+      isConnectionModalOpen,
+      openConnectionModal,
+      closeConnectionModal
+    }}>
       {children}
     </ConnectionStatusContext.Provider>
   );

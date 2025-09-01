@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ConnectionStatusProvider } from "@/contexts/ConnectionStatusContext";
+import { ConnectionModalController } from "@/components/snappjack/ConnectionModalController";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
               {children}
           </main>
           <Footer />
+          <ConnectionModalController />
         </ConnectionStatusProvider>
       </body>
     </html>
