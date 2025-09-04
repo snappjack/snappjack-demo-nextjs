@@ -3,7 +3,7 @@ import { Snappjack } from '@snappjack/sdk-js';
 
 interface Credentials {
   userId: string;
-  userApiKey: string;
+  // userApiKey no longer needed - using secure server-side flow
 }
 
 interface UseAppCredentialsProps {
@@ -25,7 +25,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
   const [connectionError, setConnectionError] = useState<{type: string; message: string; canResetCredentials: boolean} | null>(null);
 
   // App-specific configuration
-  const createUserUrl = `/api/snappjack/users/${snappId}`;
+  const createUserUrl = `/api/snappjack/${snappId}/users`;
   const storageKey = `snappjack-credentials-${snappId}`;
 
   // Initialize credentials on mount
@@ -52,8 +52,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
     Snappjack.createUser(createUserUrl)
       .then((result) => {
         const newCredentials = {
-          userId: result.userId,
-          userApiKey: result.userApiKey
+          userId: result.userId
         };
         localStorage.setItem(storageKey, JSON.stringify(newCredentials));
         setCredentials(newCredentials);
@@ -84,8 +83,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
       console.log(`${appName}: Creating new user after credential reset...`);
       const result = await Snappjack.createUser(createUserUrl);
       const newCredentials = {
-        userId: result.userId,
-        userApiKey: result.userApiKey
+        userId: result.userId
       };
       localStorage.setItem(storageKey, JSON.stringify(newCredentials));
       setCredentials(newCredentials);

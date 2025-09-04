@@ -1,4 +1,4 @@
-import { createUserHandler } from '@snappjack/sdk-js/server';
+import { createUserHandler } from '@snappjack/sdk-js';
 
 const pipsterSnappId = process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID!;
 const drawitSnappId = process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!;

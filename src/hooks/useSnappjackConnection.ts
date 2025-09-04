@@ -3,7 +3,6 @@ import { Snappjack, ConnectionData, SnappjackStatus, Tool } from '@snappjack/sdk
 
 interface Credentials {
   userId: string;
-  userApiKey: string;
 }
 
 interface UseSnappjackConnectionProps {
@@ -37,47 +36,73 @@ export const useSnappjackConnection = ({
   useEffect(() => {
     if (typeof window === 'undefined' || !credentials || isLoadingCredentials) return;
 
-    const snappjack = new Snappjack({
-      userId: credentials.userId,
-      userApiKey: credentials.userApiKey,
-      snappId,
-      tools,
-      autoReconnect
-    });
-    
-    snappjackRef.current = snappjack;
-    setAvailableTools(tools);
-
-    snappjack.on('status', (newStatus: SnappjackStatus) => {
-      setStatus(newStatus);
-    });
-
-    snappjack.on('user-api-key-generated', (data: ConnectionData) => {
-      setConnectionData(data);
-      console.log('App connected via Snappjack!');
-    });
-
-    snappjack.on('connection-error', (error: {type: string; message: string; canResetCredentials: boolean}) => {
-      console.error('Connection error:', error);
-      if (onConnectionError) {
-        onConnectionError(error);
-      }
-    });
-
-    snappjack.connect().catch((error: Error) => {
-      console.error('Connection failed:', error);
-      if (onConnectionError) {
-        onConnectionError({
-          type: 'connection_failed',
-          message: error.message,
-          canResetCredentials: false
+    // Function to get ephemeral token and connect
+    const connectWithToken = async () => {
+      try {
+        // Request ephemeral token from our app server
+        const response = await fetch(`/api/snappjack/${snappId}/ephemeral-token/${credentials.userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get ephemeral token: ${response.status} ${response.statusText}`);
+        }
+
+        const ephemeralToken = (await response.json()).token;
+        const userId = credentials.userId;
+
+        // Create Snappjack client with the ephemeral token
+        const snappjack = new Snappjack({
+          userId,
+          snappId,
+          ephemeralToken,
+          tools,
+          autoReconnect
+        });
+        
+        snappjackRef.current = snappjack;
+        setAvailableTools(tools);
+
+        snappjack.on('status', (newStatus: SnappjackStatus) => {
+          setStatus(newStatus);
+        });
+
+        snappjack.on('user-api-key-generated', (data: ConnectionData) => {
+          setConnectionData(data);
+          console.log('App connected via Snappjack!');
+        });
+
+        snappjack.on('connection-error', (error: {type: string; message: string; canResetCredentials: boolean}) => {
+          console.error('Connection error:', error);
+          if (onConnectionError) {
+            onConnectionError(error);
+          }
+        });
+
+        await snappjack.connect();
+        
+      } catch (error) {
+        console.error('Failed to connect with ephemeral token:', error);
+        if (onConnectionError) {
+          onConnectionError({
+            type: 'token_fetch_failed',
+            message: error instanceof Error ? error.message : 'Failed to get ephemeral token',
+            canResetCredentials: false
+          });
+        }
       }
-    });
+    };
+
+    connectWithToken();
 
     return () => {
-      snappjack.removeAllListeners();
-      snappjack.disconnect();
+      if (snappjackRef.current) {
+        snappjackRef.current.removeAllListeners();
+        snappjackRef.current.disconnect();
+      }
     };
   }, [credentials, isLoadingCredentials, snappId, tools, autoReconnect, onConnectionError]);
 
