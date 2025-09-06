@@ -69,18 +69,13 @@ src/
 │       ├── components/               # UI components
 │       └── types/
 ├── lib/
-│   └── snappjack-react/   # Portable Snappjack integration module
-│       ├── actions.ts                # Server Actions (Next.js 15)
-│       ├── useSnappjackConnection.ts # Connection management
-│       ├── useSnappjackCredentials.ts # Credential management
-│       └── index.ts                  # Module exports
-└── components/
-    ├── layout/            # Shared layout components
-    └── snappjack/         # Snappjack-specific UI components
-        ├── SnappjackConnectionStatus.tsx
-        ├── SnappjackAgentConfig.tsx
-        ├── SnappjackAvailableTools.tsx
-        └── SnappjackConnectionError.tsx
+│   └── snappjack/         # Snappjack integration modules
+│       ├── nextjs/        # Next.js-specific adapter
+│       └── react/         # Core React components and hooks
+├── components/
+│   └── layout/            # Shared layout components
+└── contexts/
+    └── PageConfigContext.tsx # Page configuration context for layout integration
 ```
 
 ## 🏗️ Architecture Overview
@@ -109,11 +104,11 @@ A **Snapp** (Snappjack-enabled app) implements a **dual-interface architecture**
    - Separates MCP protocol concerns from React state management
    - Transforms app API calls into MCP-compliant tool responses
 
-4. **Connection Layer**: Portable Snappjack integration module (`/src/lib/snappjack-react`)
-   - `useSnappjackConnection()` hook handles WebSocket lifecycle
-   - `useSnappjackCredentials()` manages authentication  
+4. **Integration Layer**: Next.js Snappjack integration (`/src/lib/snappjack/nextjs`)
+   - `useSafeSnappjack()` hook provides connection state and error handling
+   - `PageConfigContext` enables page-to-layout communication for centralized provider management
+   - `SnappjackProvider` handles WebSocket lifecycle and authentication
    - Server Actions replace traditional API routes for modern Next.js architecture
-   - Fully portable and ready for extraction to NPM package
 
 ### Key Benefits of This Pattern
 
@@ -121,6 +116,7 @@ A **Snapp** (Snappjack-enabled app) implements a **dual-interface architecture**
 - **Testability**: Each layer can be tested independently
 - **Reusability**: Connection and credential management are shared across all Snapps
 - **Consistency**: Same functionality accessible through both human and agent interfaces
+- **Centralized Provider Management**: PageConfigContext enables page-specific configurations while maintaining a single provider instance at the layout level
 
 ## 🎯 Creating Your Own Snapp
 
@@ -145,13 +141,53 @@ Create a factory function that generates MCP tools from your app API:
 - Transform app API methods into MCP-compliant tool definitions
 - Handle input validation and error responses
 - Ensure tool descriptions clearly explain functionality for AI agents
+- Return an array of `Tool` objects compatible with the Snappjack SDK
 
 ### Step 4: Page Component Integration  
 
 Connect all layers in your page component:
-- Use your app-specific hook for core functionality
-- Import from the portable `@/lib/snappjack-react` module: `useSnappjackCredentials` and `useSnappjackConnection` 
-- Include standard Snappjack UI components for connection status and agent configuration
+
+**Core Imports:**
+```tsx
+import { useMemo, useEffect } from 'react';
+import { useSafeSnappjack } from '@/lib/snappjack/nextjs';
+import { usePageConfig } from '@/contexts/PageConfigContext';
+import { SnappjackConnectionError } from '@/lib/snappjack/nextjs';
+```
+
+**Configuration Registration:**
+```tsx
+const APP_NAME = 'YourAppName';
+const { setConfig } = usePageConfig();
+const snappjackTools = useMemo(() => createSnappjackTools(yourAPI, APP_NAME), [yourAPI, APP_NAME]);
+
+useEffect(() => {
+  setConfig({
+    snappId: process.env.NEXT_PUBLIC_YOUR_SNAPP_ID!,
+    appName: APP_NAME,
+    tools: snappjackTools
+  });
+  
+  return () => setConfig(null); // Cleanup on unmount
+}, [setConfig, snappjackTools, APP_NAME]);
+```
+
+**Connection State Handling:**
+```tsx
+const { connectionError, resetCredentials } = useSafeSnappjack();
+
+// Include in your JSX:
+{connectionError && (
+  <SnappjackConnectionError
+    error={connectionError}
+    onResetCredentials={resetCredentials || (() => {})}
+  />
+)}
+```
+
+Key requirements:
+- Use `usePageConfig()` to register your Snapp configuration with the layout
+- Call `setConfig()` with your `snappId`, `appName`, and `tools` in a `useEffect`
 - Ensure the same functionality is accessible through both human GUI and agent tools
 
 ## 🤖 Using Claude Code to Build Snapps
@@ -194,17 +230,21 @@ First, examine the existing Pipster and DrawIt implementations to understand the
 
 **Architecture Requirements:**
 - Follow the same 4-layer pattern: business logic → state management → tool factory → UI integration
-- Use the existing Snappjack UI components (SnappjackConnectionStatus, SnappjackAgentConfig, etc.)
+- Use `useSafeSnappjack` and `usePageConfig` from `@/lib/snappjack/nextjs`
+- Include `SnappjackConnectionError` component for error handling
+- Use `setConfig({ snappId, appName, tools })` in `useEffect` to register with layout
 - Place in `src/app/todolist/` following the established directory structure
 - Create types in `types/todolist.ts`
 - Use `useRef` pattern in hooks to prevent stale closures
-- Set up environment variables following the new naming convention: `SNAPP_API_KEY_[sanitized_snapp_id]`
+- Set up environment variables following the naming convention: `SNAPP_API_KEY_[sanitized_snapp_id]`
 
 **Implementation Details:**
 - Todo items should have: id, text, completed boolean, priority, createdAt, completedAt, optional dueDate
 - State should track: todos array, filter mode, and any UI state
 - Tools should return structured data that agents can easily parse
 - Include comprehensive system documentation in the tool factory
+- Import `useSafeSnappjack` and `usePageConfig` from `@/lib/snappjack/nextjs`
+- Register configuration using `setConfig({ snappId, appName, tools })` in `useEffect`
 
 Please create all necessary files and ensure the Todo List Snapp follows the exact same patterns as Pipster and DrawIt for consistency.
 ```
@@ -229,20 +269,28 @@ npm run lint      # Run ESLint
 
 ### Required Environment Variables
 
-Create a `.env` file in the project root with the following:
+Create a `.env` file by copying `.env.example` and filling in your credentials:
+
+```bash
+# Copy the example file
+cp .env.example .env
+```
+
+The `.env.example` file shows the exact pattern:
 
 ```bash
 # Pipster app credentials
-NEXT_PUBLIC_PIPSTER_SNAPP_ID="your-pipster-app-id"
-SNAPP_API_KEY_your_pipster_app_id_with_underscores="your-pipster-api-key"
+NEXT_PUBLIC_PIPSTER_SNAPP_ID=""
+SNAPP_API_KEY_[your_pipster_snapp_id_with_underscores]=""
 
 # DrawIt app credentials  
-NEXT_PUBLIC_DRAWIT_SNAPP_ID="your-drawit-app-id"
-SNAPP_API_KEY_your_drawit_app_id_with_underscores="your-drawit-api-key"
-
-# IMPORTANT: Replace hyphens with underscores in your snappId for the SNAPP_API_KEY variable names
-# Example: if your snappId is "my-cool-app", use SNAPP_API_KEY_my_cool_app
+NEXT_PUBLIC_DRAWIT_SNAPP_ID=""
+SNAPP_API_KEY_[your_drawit_snapp_id_with_underscores]=""
 ```
+
+**IMPORTANT**: For the `SNAPP_API_KEY` variables, replace hyphens with underscores in your `snappId`:
+- Pattern: `SNAPP_API_KEY_[your_snapp_id_with_underscores]`
+- Example: if your `snappId` is "my-cool-app", use `SNAPP_API_KEY_my_cool_app`
 
 To get your App IDs and API keys:
 - Visit [www.snappjack.com](https://www.snappjack.com) to request access
