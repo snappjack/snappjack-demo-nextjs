@@ -3,8 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { ConnectionStatusProvider } from "@/contexts/ConnectionStatusContext";
-import { ConnectionModalController } from "@/components/snappjack/ConnectionModalController";
+import { PageConfigProvider } from "@/contexts/PageConfigContext";
+import { ConfiguredSnappjackProvider } from "@/components/layout/ConfiguredSnappjackProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,14 +42,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <ConnectionStatusProvider>
-          <Header />
-          <main className="flex-grow flex flex-col">
-              {children}
-          </main>
-          <Footer />
-          <ConnectionModalController />
-        </ConnectionStatusProvider>
+        <PageConfigProvider>
+          <ConfiguredSnappjackProvider>
+            <Header />
+            <main className="flex-grow flex flex-col">
+                {children}
+            </main>
+            <Footer />
+          </ConfiguredSnappjackProvider>
+        </PageConfigProvider>
       </body>
     </html>
   );

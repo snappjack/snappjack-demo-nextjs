@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { createUserAction } from './actions';
 
 interface Credentials {
   userId: string;
-  // userApiKey no longer needed - using secure server-side flow
 }
 
-interface UseAppCredentialsProps {
+interface CreateUserFunction {
+  (snappId: string): Promise<{ userId: string } | { error: string }>;
+}
+
+interface UseSnappjackCredentialsProps {
   appName: string;
   snappId: string;
+  createUser: CreateUserFunction;
 }
 
-interface UseAppCredentialsReturn {
+interface UseSnappjackCredentialsReturn {
   credentials: Credentials | null;
   isLoadingCredentials: boolean;
   connectionError: {type: string; message: string; canResetCredentials: boolean} | null;
@@ -19,7 +22,11 @@ interface UseAppCredentialsReturn {
   setConnectionError: (error: {type: string; message: string; canResetCredentials: boolean} | null) => void;
 }
 
-export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsProps): UseAppCredentialsReturn => {
+export const useSnappjackCredentials = ({ 
+  appName, 
+  snappId, 
+  createUser 
+}: UseSnappjackCredentialsProps): UseSnappjackCredentialsReturn => {
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
   const [connectionError, setConnectionError] = useState<{type: string; message: string; canResetCredentials: boolean} | null>(null);
@@ -49,8 +56,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
     // Create new user if no valid credentials found
     console.log(`${appName}: No credentials found, creating new user...`);
     
-    // Use Server Action instead of fetch
-    createUserAction(snappId)
+    createUser(snappId)
       .then((result) => {
         if ('error' in result) {
           throw new Error(result.error);
@@ -74,7 +80,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
       .finally(() => {
         setIsLoadingCredentials(false);
       });
-  }, [appName, snappId, storageKey]);
+  }, [appName, snappId, storageKey, createUser]);
 
   // Function to reset credentials and create new user
   const resetCredentials = useCallback(async () => {
@@ -87,8 +93,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
     try {
       console.log(`${appName}: Creating new user after credential reset...`);
       
-      // Use Server Action instead of Snappjack.createUser
-      const result = await createUserAction(snappId);
+      const result = await createUser(snappId);
       
       if ('error' in result) {
         throw new Error(result.error);
@@ -110,7 +115,7 @@ export const useSnappjackCredentials = ({ appName, snappId }: UseAppCredentialsP
     } finally {
       setIsLoadingCredentials(false);
     }
-  }, [appName, snappId, storageKey]);
+  }, [appName, snappId, storageKey, createUser]);
 
   return {
     credentials,

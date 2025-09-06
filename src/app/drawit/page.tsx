@@ -1,21 +1,22 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useDrawit } from './hooks/useDrawit';
 import { PaintBrushIcon } from '@heroicons/react/24/outline';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useCanvasInteraction } from './hooks/useCanvasInteraction';
-import { useSnappjackConnection, useSnappjackCredentials } from '@/lib/snappjack-react';
+import { useSafeSnappjack } from '@/lib/snappjack/nextjs';
+import { usePageConfig } from '@/contexts/PageConfigContext';
 import { createSnappjackTools } from './lib/createSnappjackTools';
-import { useSetConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import { CanvasObject } from './types/drawit';
 import Canvas from './components/Canvas';
 import CanvasToolbar from './components/CanvasToolbar';
-import { SnappjackConnectionError } from '@/components/snappjack/SnappjackConnectionError';
+import { SnappjackConnectionError } from '@/lib/snappjack/nextjs';
 
+// Main component that registers Snappjack configuration and renders content
 export default function DrawItPage() {
   const APP_NAME = 'DrawIt';
-  const APP_EMOJI = '🎨'; // Keep for logs
+  const { setConfig } = usePageConfig();
 
   // Drawing functionality
   const {
@@ -66,12 +67,6 @@ export default function DrawItPage() {
     onUpdateObject: modifyObject
   });
 
-  // Credential management
-  const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({
-    appName: APP_NAME,
-    snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!
-  });
-
   // Create Snappjack tools from drawing API (memoized to prevent infinite re-renders)
   const snappjackTools = useMemo(() => {
     const drawingAPI = {
@@ -87,19 +82,19 @@ export default function DrawItPage() {
       getCanvasImage
     };
     return createSnappjackTools(drawingAPI, APP_NAME);
-  }, [addRectangle, addCircle, addText, addPolygon, modifyObject, deleteObject, reorderObject, clearCanvas, getCanvasStatus, getCanvasImage]);
+  }, [addRectangle, addCircle, addText, addPolygon, modifyObject, deleteObject, reorderObject, clearCanvas, getCanvasStatus, getCanvasImage, APP_NAME]);
 
-  // Snappjack connection management
-  const { status, connectionData, availableTools } = useSnappjackConnection({
-    credentials,
-    isLoadingCredentials,
-    snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!,
-    tools: snappjackTools,
-    onConnectionError: setConnectionError
-  });
+  // Register page configuration with layout on mount
+  useEffect(() => {
+    setConfig({
+      snappId: process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!,
+      appName: APP_NAME,
+      tools: snappjackTools
+    });
 
-  // Update header connection status
-  useSetConnectionStatus(status, APP_NAME, connectionData, availableTools);
+    // Cleanup configuration when component unmounts
+    return () => setConfig(null);
+  }, [setConfig, snappjackTools, APP_NAME]);
 
   // Create wrapper function for updating selected object from toolbar
   const handleUpdateSelectedObject = (updates: Partial<CanvasObject>) => {
@@ -107,6 +102,9 @@ export default function DrawItPage() {
       modifyObject(drawingState.selectedObject.id, updates);
     }
   };
+
+  // Get connection state from Snappjack context (if available)
+  const { connectionError, resetCredentials } = useSafeSnappjack();
 
   return (
     <div className="flex flex-col h-[calc(100vh-150px)] z-50">
@@ -140,11 +138,10 @@ export default function DrawItPage() {
         <div className="bg-red-50 border border-red-200 p-4">
           <SnappjackConnectionError
             error={connectionError}
-            onResetCredentials={resetCredentials}
+            onResetCredentials={resetCredentials || (() => {})}
           />
         </div>
       )}
-
 
       {/* Main Canvas Area - takes remaining space */}
       <div className="flex-1 bg-gray-100 flex items-center justify-center overflow-hidden">

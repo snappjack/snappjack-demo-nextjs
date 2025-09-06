@@ -1,30 +1,14 @@
 'use client';
 
-import { useConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
-
-interface ConnectionData {
-  snappId?: string;
-  userId?: string;
-  serverUrl?: string;
-  mcpEndpoint?: string;
-  userApiKey?: string;
-}
-
-interface Tool {
-  name: string;
-  description?: string;
-}
 
 interface MiniConnectionStatusProps {
   status: 'connecting' | 'connected' | 'bridged' | 'disconnected' | 'error';
-  appName: string;
-  connectionData?: ConnectionData | null;
-  availableTools?: Tool[];
+  appInitial: string;
+  onClick: () => void;
 }
 
-export function MiniConnectionStatus({ status, appName }: MiniConnectionStatusProps) {
-  const { openConnectionModal } = useConnectionStatus();
+export function MiniConnectionStatus({ status, appInitial, onClick }: MiniConnectionStatusProps) {
 
   const getAgentConnectionColor = () => {
     switch (status) {
@@ -80,7 +64,7 @@ export function MiniConnectionStatus({ status, appName }: MiniConnectionStatusPr
     <div className="relative">
       <div 
         className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={openConnectionModal}
+        onClick={onClick}
       >
         {/* Mini connection diagram */}
         <div className="flex items-center">
@@ -127,7 +111,7 @@ export function MiniConnectionStatus({ status, appName }: MiniConnectionStatusPr
         <div className="relative">
           <div className="w-4 h-4 bg-gray-600 rounded-sm flex items-center justify-center">
             <span className="text-[8px] text-white font-bold">
-              {appName === 'Pipster' ? 'P' : appName === 'DrawIt' ? 'D' : 'A'}
+              {appInitial}
             </span>
           </div>
           {(status === 'connected' || status === 'bridged') && (

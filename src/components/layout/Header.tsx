@@ -2,12 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MiniConnectionStatus } from '@/components/snappjack/MiniConnectionStatus';
-import { useConnectionStatus } from '@/contexts/ConnectionStatusContext';
+import { MiniConnectionStatus, useSafeSnappjack } from '@/lib/snappjack/nextjs';
 
 export default function Header() {
   const pathname = usePathname();
-  const { status, appName, connectionData, availableTools } = useConnectionStatus();
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -15,8 +13,13 @@ export default function Header() {
     { href: '/drawit', label: 'DrawIt' },
   ];
 
-  // Determine if we're on an app page
+  // Determine if we're on an app page and what the current app is
   const isAppPage = pathname === '/pipster' || pathname === '/drawit';
+  const currentApp = pathname === '/pipster' ? 'Pipster' : pathname === '/drawit' ? 'DrawIt' : null;
+  const appInitial = currentApp === 'Pipster' ? 'P' : currentApp === 'DrawIt' ? 'D' : '';
+
+  // Get Snappjack context - safely handles cases where provider is not available
+  const { status, openConnectionModal } = useSafeSnappjack();
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 flex items-center h-16">
@@ -30,14 +33,13 @@ export default function Header() {
               <span className="text-sm text-gray-600 font-medium">Demos</span>
             </Link>
             
-            {/* Mini Connection Status - only show on app pages */}
-            {isAppPage && status && (
+            {/* Mini Connection Status - only show on app pages when context is available */}
+            {isAppPage && status && openConnectionModal && (
               <div className="border-l border-gray-200 pl-6">
                 <MiniConnectionStatus 
                   status={status} 
-                  appName={appName}
-                  connectionData={connectionData}
-                  availableTools={availableTools}
+                  appInitial={appInitial}
+                  onClick={openConnectionModal}
                 />
               </div>
             )}

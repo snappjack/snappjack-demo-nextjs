@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool } from '@snappjack/sdk-js';
-import { generateEphemeralTokenAction } from './actions';
 
 interface Credentials {
   userId: string;
+}
+
+interface GenerateEphemeralTokenFunction {
+  (snappId: string, userId: string): Promise<{ token: string; expiresAt: number; snappId: string; userId: string } | { error: string; type?: string }>;
 }
 
 interface UseSnappjackConnectionProps {
@@ -11,6 +14,7 @@ interface UseSnappjackConnectionProps {
   isLoadingCredentials: boolean;
   snappId: string;
   tools: Tool[];
+  generateEphemeralToken: GenerateEphemeralTokenFunction;
   autoReconnect?: boolean;
   onConnectionError?: (error: {type: string; message: string; canResetCredentials: boolean}) => void;
 }
@@ -26,6 +30,7 @@ export const useSnappjackConnection = ({
   isLoadingCredentials, 
   snappId, 
   tools, 
+  generateEphemeralToken,
   autoReconnect = true,
   onConnectionError 
 }: UseSnappjackConnectionProps): UseSnappjackConnectionReturn => {
@@ -40,11 +45,10 @@ export const useSnappjackConnection = ({
     // Function to get ephemeral token and connect
     const connectWithToken = async () => {
       try {
-        // Use Server Action instead of fetch
-        const tokenResult = await generateEphemeralTokenAction(snappId, credentials.userId);
+        const tokenResult = await generateEphemeralToken(snappId, credentials.userId);
         
         if ('error' in tokenResult) {
-          // Handle structured error from Server Action
+          // Handle structured error from generateEphemeralToken function
           const errorType = tokenResult.type === 'user_validation_error' ? 'invalid_user_id' : 'token_fetch_failed';
           const canResetCredentials = tokenResult.type === 'user_validation_error';
           
@@ -122,7 +126,7 @@ export const useSnappjackConnection = ({
         snappjackRef.current.disconnect();
       }
     };
-  }, [credentials, isLoadingCredentials, snappId, tools, autoReconnect, onConnectionError]);
+  }, [credentials, isLoadingCredentials, snappId, tools, generateEphemeralToken, autoReconnect, onConnectionError]);
 
   return {
     status,

@@ -1,19 +1,20 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { usePipster } from './hooks/usePipster';
 import { DiceIcon } from '@/components/icons/DiceIcon';
-import { useSnappjackConnection, useSnappjackCredentials } from '@/lib/snappjack-react';
+import { useSafeSnappjack } from '@/lib/snappjack/nextjs';
+import { usePageConfig } from '@/contexts/PageConfigContext';
 import { createSnappjackTools } from './lib/createSnappjackTools';
-import { useSetConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import DiceContainer from './components/DiceContainer';
 import RollerButtons from './components/RollerButtons';
 import KeepDieStatus from './components/KeepDieStatus';
-import { SnappjackConnectionError } from '@/components/snappjack/SnappjackConnectionError';
+import { SnappjackConnectionError } from '@/lib/snappjack/nextjs';
 
+// Main component that registers Snappjack configuration and renders content
 export default function DicePage() {
   const APP_NAME = 'Pipster';
-  const APP_EMOJI = '🎲'; // Keep for logs
+  const { setConfig } = usePageConfig();
   
   // Dice game functionality
   const {
@@ -29,12 +30,6 @@ export default function DicePage() {
     getCurrentDiceState,
   } = usePipster();
 
-  // Credential management
-  const { credentials, isLoadingCredentials, connectionError, resetCredentials, setConnectionError } = useSnappjackCredentials({ 
-    appName: APP_NAME, 
-    snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID! 
-  });
-
   // Create Snappjack tools from dice game API (memoized to prevent infinite re-renders)
   const snappjackTools = useMemo(() => {
     const diceGameAPI = {
@@ -44,21 +39,24 @@ export default function DicePage() {
       resetGame
     };
     return createSnappjackTools(diceGameAPI, APP_NAME);
-  }, [getCurrentDiceState, setDicePlan, performRoll, resetGame]);
+  }, [getCurrentDiceState, setDicePlan, performRoll, resetGame, APP_NAME]);
 
-  // Snappjack connection management
-  const { status, connectionData, availableTools } = useSnappjackConnection({
-    credentials,
-    isLoadingCredentials,
-    snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID!,
-    tools: snappjackTools,
-    onConnectionError: setConnectionError
-  });
+  // Register page configuration with layout on mount
+  useEffect(() => {
+    setConfig({
+      snappId: process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID!,
+      appName: APP_NAME,
+      tools: snappjackTools
+    });
 
-  // Update header connection status
-  useSetConnectionStatus(status, APP_NAME, connectionData, availableTools);
+    // Cleanup configuration when component unmounts
+    return () => setConfig(null);
+  }, [setConfig, snappjackTools, APP_NAME]);
 
   const isRollDisabled = gameState.keptDice.filter(kept => kept).length === 5;
+
+  // Get connection state from Snappjack context (if available)
+  const { connectionError, resetCredentials } = useSafeSnappjack();
 
   return (
     <div className="bg-gray-100 min-h-0 flex-1 py-8">
@@ -69,7 +67,7 @@ export default function DicePage() {
           <div className="mb-5">
             <SnappjackConnectionError 
               error={connectionError} 
-              onResetCredentials={resetCredentials} 
+              onResetCredentials={resetCredentials || (() => {})} 
             />
           </div>
         )}
@@ -115,20 +113,6 @@ export default function DicePage() {
           />
           </div>
         </div>
-
-        {/* Connection Status */}
-        {/* <SnappjackConnectionStatus 
-          status={status} 
-          appName={APP_NAME} 
-          appEmoji={APP_EMOJI}
-          appIcon={<DiceIcon className="w-10 h-10 text-purple-600" />}
-        /> */}
-
-        {/* Available Tools - only show when agent is connected (bridged) */}
-        {/* {status === 'bridged' && <SnappjackAvailableTools tools={availableTools} />} */}
-
-        {/* Agent Configuration */}
-        {/* <SnappjackAgentConfig connectionData={connectionData} appName={APP_NAME.toLowerCase()} /> */}
       </div>
     </div>
   );
