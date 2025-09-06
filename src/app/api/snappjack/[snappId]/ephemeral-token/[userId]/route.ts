@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { SnappjackServerHelper } from '@snappjack/sdk-js';
+import { SnappjackServerHelper, SnappjackHttpError } from '@snappjack/sdk-js';
 
 const pipsterSnappId = process.env.NEXT_PUBLIC_PIPSTER_SNAPP_ID!;
 const drawitSnappId = process.env.NEXT_PUBLIC_DRAWIT_SNAPP_ID!;
@@ -65,9 +65,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Ephemeral token request error:', error);
     
+    // Pass through HTTP errors from SDK with their original status and body
+    if (error instanceof SnappjackHttpError) {
+      return new Response(JSON.stringify(error.body), {
+        status: error.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Generic error fallback
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Internal server error' 
     }), {

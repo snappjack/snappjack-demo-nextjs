@@ -48,7 +48,29 @@ export const useSnappjackConnection = ({
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to get ephemeral token: ${response.status} ${response.statusText}`);
+          // Try to parse structured error response
+          let errorMessage = `Failed to get ephemeral token: ${response.status} ${response.statusText}`;
+          let errorType = 'token_fetch_failed';
+          let canResetCredentials = false;
+          
+          try {
+            const errorData = await response.json();
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+            if (errorData.type === 'user_validation_error') {
+              errorType = 'invalid_user_id';
+              canResetCredentials = true;
+            }
+          } catch {
+            // If JSON parsing fails, use default error
+          }
+          
+          throw new Error(JSON.stringify({ 
+            type: errorType, 
+            message: errorMessage, 
+            canResetCredentials 
+          }));
         }
 
         const ephemeralToken = (await response.json()).token;
@@ -87,6 +109,20 @@ export const useSnappjackConnection = ({
       } catch (error) {
         console.error('Failed to connect with ephemeral token:', error);
         if (onConnectionError) {
+          // Try to parse structured error from our custom error format
+          if (error instanceof Error) {
+            try {
+              const errorData = JSON.parse(error.message);
+              if (errorData.type && errorData.message !== undefined && errorData.canResetCredentials !== undefined) {
+                onConnectionError(errorData);
+                return;
+              }
+            } catch {
+              // If parsing fails, fall through to default error
+            }
+          }
+          
+          // Default error handling
           onConnectionError({
             type: 'token_fetch_failed',
             message: error instanceof Error ? error.message : 'Failed to get ephemeral token',
