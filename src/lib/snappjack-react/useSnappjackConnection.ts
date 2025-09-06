@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Snappjack, ConnectionData, SnappjackStatus, Tool } from '@snappjack/sdk-js';
+import { generateEphemeralTokenAction } from './actions';
 
 interface Credentials {
   userId: string;
@@ -39,41 +40,22 @@ export const useSnappjackConnection = ({
     // Function to get ephemeral token and connect
     const connectWithToken = async () => {
       try {
-        // Request ephemeral token from our app server
-        const response = await fetch(`/api/snappjack/${snappId}/ephemeral-token/${credentials.userId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          // Try to parse structured error response
-          let errorMessage = `Failed to get ephemeral token: ${response.status} ${response.statusText}`;
-          let errorType = 'token_fetch_failed';
-          let canResetCredentials = false;
-          
-          try {
-            const errorData = await response.json();
-            if (errorData.error) {
-              errorMessage = errorData.error;
-            }
-            if (errorData.type === 'user_validation_error') {
-              errorType = 'invalid_user_id';
-              canResetCredentials = true;
-            }
-          } catch {
-            // If JSON parsing fails, use default error
-          }
+        // Use Server Action instead of fetch
+        const tokenResult = await generateEphemeralTokenAction(snappId, credentials.userId);
+        
+        if ('error' in tokenResult) {
+          // Handle structured error from Server Action
+          const errorType = tokenResult.type === 'user_validation_error' ? 'invalid_user_id' : 'token_fetch_failed';
+          const canResetCredentials = tokenResult.type === 'user_validation_error';
           
           throw new Error(JSON.stringify({ 
             type: errorType, 
-            message: errorMessage, 
+            message: tokenResult.error, 
             canResetCredentials 
           }));
         }
 
-        const ephemeralToken = (await response.json()).token;
+        const ephemeralToken = tokenResult.token;
         const userId = credentials.userId;
 
         // Create Snappjack client with the ephemeral token

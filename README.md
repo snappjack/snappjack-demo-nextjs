@@ -68,9 +68,12 @@ src/
 │       │   └── geometry.ts           # Utility functions
 │       ├── components/               # UI components
 │       └── types/
-├── hooks/                 # Shared hooks
-│   ├── useSnappjackConnection.ts     # Shared connection management
-│   └── useSnappjackCredentials.ts    # Credential management
+├── lib/
+│   └── snappjack-react/   # Portable Snappjack integration module
+│       ├── actions.ts                # Server Actions (Next.js 15)
+│       ├── useSnappjackConnection.ts # Connection management
+│       ├── useSnappjackCredentials.ts # Credential management
+│       └── index.ts                  # Module exports
 └── components/
     ├── layout/            # Shared layout components
     └── snappjack/         # Snappjack-specific UI components
@@ -106,10 +109,11 @@ A **Snapp** (Snappjack-enabled app) implements a **dual-interface architecture**
    - Separates MCP protocol concerns from React state management
    - Transforms app API calls into MCP-compliant tool responses
 
-4. **Connection Layer**: Shared Snappjack WebSocket management
+4. **Connection Layer**: Portable Snappjack integration module (`/src/lib/snappjack-react`)
    - `useSnappjackConnection()` hook handles WebSocket lifecycle
-   - `useSnappjackCredentials()` manages authentication
-   - Shared across all Snapps for consistency
+   - `useSnappjackCredentials()` manages authentication  
+   - Server Actions replace traditional API routes for modern Next.js architecture
+   - Fully portable and ready for extraction to NPM package
 
 ### Key Benefits of This Pattern
 
@@ -146,7 +150,7 @@ Create a factory function that generates MCP tools from your app API:
 
 Connect all layers in your page component:
 - Use your app-specific hook for core functionality
-- Use shared `useSnappjackCredentials` and `useSnappjackConnection` hooks
+- Import from the portable `@/lib/snappjack-react` module: `useSnappjackCredentials` and `useSnappjackConnection` 
 - Include standard Snappjack UI components for connection status and agent configuration
 - Ensure the same functionality is accessible through both human GUI and agent tools
 
@@ -194,7 +198,7 @@ First, examine the existing Pipster and DrawIt implementations to understand the
 - Place in `src/app/todolist/` following the established directory structure
 - Create types in `types/todolist.ts`
 - Use `useRef` pattern in hooks to prevent stale closures
-- Set up environment variables for TODOLIST_SNAPP_ID and API key
+- Set up environment variables following the new naming convention: `SNAPP_API_KEY_[sanitized_snapp_id]`
 
 **Implementation Details:**
 - Todo items should have: id, text, completed boolean, priority, createdAt, completedAt, optional dueDate
@@ -230,11 +234,14 @@ Create a `.env` file in the project root with the following:
 ```bash
 # Pipster app credentials
 NEXT_PUBLIC_PIPSTER_SNAPP_ID="your-pipster-app-id"
-PIPSTER_SNAPP_API_KEY="your-pipster-api-key"
+SNAPP_API_KEY_your_pipster_app_id_with_underscores="your-pipster-api-key"
 
 # DrawIt app credentials  
 NEXT_PUBLIC_DRAWIT_SNAPP_ID="your-drawit-app-id"
-DRAWIT_SNAPP_API_KEY="your-drawit-api-key"
+SNAPP_API_KEY_your_drawit_app_id_with_underscores="your-drawit-api-key"
+
+# IMPORTANT: Replace hyphens with underscores in your snappId for the SNAPP_API_KEY variable names
+# Example: if your snappId is "my-cool-app", use SNAPP_API_KEY_my_cool_app
 ```
 
 To get your App IDs and API keys:

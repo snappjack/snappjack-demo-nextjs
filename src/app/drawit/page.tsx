@@ -5,17 +5,13 @@ import { useDrawit } from './hooks/useDrawit';
 import { PaintBrushIcon } from '@heroicons/react/24/outline';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useCanvasInteraction } from './hooks/useCanvasInteraction';
-import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
-import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
+import { useSnappjackConnection, useSnappjackCredentials } from '@/lib/snappjack-react';
 import { createSnappjackTools } from './lib/createSnappjackTools';
 import { useSetConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import { CanvasObject } from './types/drawit';
 import Canvas from './components/Canvas';
 import CanvasToolbar from './components/CanvasToolbar';
-import { SnappjackConnectionStatus } from '@/components/snappjack/SnappjackConnectionStatus';
-import { SnappjackAgentConfig } from '@/components/snappjack/SnappjackAgentConfig';
 import { SnappjackConnectionError } from '@/components/snappjack/SnappjackConnectionError';
-import { SnappjackAvailableTools } from '@/components/snappjack/SnappjackAvailableTools';
 
 export default function DrawItPage() {
   const APP_NAME = 'DrawIt';

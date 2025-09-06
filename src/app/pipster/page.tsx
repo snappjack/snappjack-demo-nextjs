@@ -3,16 +3,12 @@
 import { useMemo } from 'react';
 import { usePipster } from './hooks/usePipster';
 import { DiceIcon } from '@/components/icons/DiceIcon';
-import { useSnappjackConnection } from '@/hooks/useSnappjackConnection';
-import { useSnappjackCredentials } from '@/hooks/useSnappjackCredentials';
+import { useSnappjackConnection, useSnappjackCredentials } from '@/lib/snappjack-react';
 import { createSnappjackTools } from './lib/createSnappjackTools';
 import { useSetConnectionStatus } from '@/contexts/ConnectionStatusContext';
 import DiceContainer from './components/DiceContainer';
 import RollerButtons from './components/RollerButtons';
 import KeepDieStatus from './components/KeepDieStatus';
-import { SnappjackConnectionStatus } from '@/components/snappjack/SnappjackConnectionStatus';
-import { SnappjackAgentConfig } from '@/components/snappjack/SnappjackAgentConfig';
-import { SnappjackAvailableTools } from '@/components/snappjack/SnappjackAvailableTools';
 import { SnappjackConnectionError } from '@/components/snappjack/SnappjackConnectionError';
 
 export default function DicePage() {
