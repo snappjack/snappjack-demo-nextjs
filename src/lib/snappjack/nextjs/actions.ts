@@ -1,6 +1,6 @@
 'use server';
 
-import { createUserHandler, SnappjackServerHelper, SnappjackHttpError } from '@snappjack/sdk-js';
+import { SnappjackServerHelper, SnappjackHttpError } from '@snappjack/sdk-js/server';
 
 /**
  * Retrieves the API key for a given snappId from environment variables.
@@ -30,18 +30,18 @@ export async function createUserAction(snappId: string): Promise<{ userId: strin
   }
 
   try {
-    const handler = createUserHandler({ snappApiKey: apiKey, snappId });
-    const mockRequest = new Request('http://localhost', { method: 'POST' });
-    const response = await handler.POST(mockRequest);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      return { error: data.error || 'Failed to create user' };
-    }
-    
-    return { userId: data.userId };
+    const helper = new SnappjackServerHelper({ snappApiKey: apiKey, snappId });
+    const result = await helper.createUser();
+    return { userId: result.userId };
   } catch (error) {
     console.error('Error creating user:', error);
+    
+    // Handle HTTP errors from SDK
+    if (error instanceof SnappjackHttpError) {
+      const body = error.body as { error?: string };
+      return { error: body.error || 'Failed to create user' };
+    }
+    
     return { error: error instanceof Error ? error.message : 'Internal server error' };
   }
 }

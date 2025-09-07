@@ -42,31 +42,33 @@ export const useSnappjackConnection = ({
   useEffect(() => {
     if (typeof window === 'undefined' || !credentials || isLoadingCredentials) return;
 
-    // Function to get ephemeral token and connect
-    const connectWithToken = async () => {
+    // Function to connect with token provider
+    const connect = async () => {
       try {
-        const tokenResult = await generateEphemeralToken(snappId, credentials.userId);
-        
-        if ('error' in tokenResult) {
-          // Handle structured error from generateEphemeralToken function
-          const errorType = tokenResult.type === 'user_validation_error' ? 'invalid_user_id' : 'token_fetch_failed';
-          const canResetCredentials = tokenResult.type === 'user_validation_error';
+        // Create token provider function that captures current credentials
+        const tokenProvider = async (): Promise<string> => {
+          const tokenResult = await generateEphemeralToken(snappId, credentials.userId);
           
-          throw new Error(JSON.stringify({ 
-            type: errorType, 
-            message: tokenResult.error, 
-            canResetCredentials 
-          }));
-        }
+          if ('error' in tokenResult) {
+            // Handle structured error from generateEphemeralToken function
+            const errorType = tokenResult.type === 'user_validation_error' ? 'invalid_user_id' : 'token_fetch_failed';
+            const canResetCredentials = tokenResult.type === 'user_validation_error';
+            
+            throw new Error(JSON.stringify({ 
+              type: errorType, 
+              message: tokenResult.error, 
+              canResetCredentials 
+            }));
+          }
+          
+          return tokenResult.token;
+        };
 
-        const ephemeralToken = tokenResult.token;
-        const userId = credentials.userId;
-
-        // Create Snappjack client with the ephemeral token
+        // Create Snappjack client with the token provider
         const snappjack = new Snappjack({
-          userId,
+          userId: credentials.userId,
           snappId,
-          ephemeralToken,
+          tokenProvider,
           tools,
           autoReconnect
         });
@@ -93,7 +95,7 @@ export const useSnappjackConnection = ({
         await snappjack.connect();
         
       } catch (error) {
-        console.error('Failed to connect with ephemeral token:', error);
+        console.error('Failed to connect:', error);
         if (onConnectionError) {
           // Try to parse structured error from our custom error format
           if (error instanceof Error) {
@@ -118,7 +120,7 @@ export const useSnappjackConnection = ({
       }
     };
 
-    connectWithToken();
+    connect();
 
     return () => {
       if (snappjackRef.current) {
