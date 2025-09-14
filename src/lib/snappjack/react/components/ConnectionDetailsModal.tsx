@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
+import AuthRequirementToggle from '@/components/auth/AuthRequirementToggle';
 
 interface ConnectionData {
   snappId?: string;
@@ -9,6 +10,7 @@ interface ConnectionData {
   serverUrl?: string;
   mcpEndpoint?: string;
   userApiKey?: string;
+  requireAuthHeader?: boolean;
 }
 
 interface Tool {
@@ -269,6 +271,24 @@ export function ConnectionDetailsModal({
               {copySuccess && (
                 <div className="mt-1 text-xs text-green-600">Copied!</div>
               )}
+            </div>
+          )}
+
+          {/* Authentication Settings */}
+          {connectionData && connectionData.snappId && connectionData.userId && (
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Security Settings</h4>
+              <div className="bg-gray-50 rounded p-3">
+                <AuthRequirementToggle 
+                  snappId={connectionData.snappId}
+                  userId={connectionData.userId}
+                  requireAuth={connectionData.requireAuthHeader ?? true}
+                  onAuthRequirementChange={(requireAuth) => {
+                    // Optionally handle the change, could update connection data
+                    console.log('Auth requirement changed:', requireAuth);
+                  }}
+                />
+              </div>
             </div>
           )}
 

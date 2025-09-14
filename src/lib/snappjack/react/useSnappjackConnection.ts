@@ -80,6 +80,13 @@ export const useSnappjackConnection = ({
           setStatus(newStatus);
         });
 
+        // Use new event name but keep backward compatibility
+        snappjack.on('connection-info-updated', (data: ConnectionData) => {
+          setConnectionData(data);
+          console.log('App connected via Snappjack!');
+        });
+        
+        // Backward compatibility for older SDK versions
         snappjack.on('user-api-key-generated', (data: ConnectionData) => {
           setConnectionData(data);
           console.log('App connected via Snappjack!');

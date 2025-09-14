@@ -104,3 +104,58 @@ export async function generateEphemeralTokenAction(
     };
   }
 }
+
+/**
+ * Server Action to update authentication requirement for a user
+ * @param snappId - The ID of the snapp
+ * @param userId - The ID of the user
+ * @param requireAuthHeader - Whether to require Bearer token authentication
+ * @returns Promise with update result or error
+ */
+export async function updateAuthRequirementAction(
+  snappId: string, 
+  userId: string,
+  requireAuthHeader: boolean
+): Promise<{ snappId: string; userId: string; requireAuthHeader: boolean; updatedAt: string } | { error: string; type?: string }> {
+  const { apiKey, lookedUpKey } = getApiKeyForSnapp(snappId);
+
+  if (!apiKey) {
+    const errorMessage = `Configuration error for snappId '${snappId}'. The server looked for the environment variable '${lookedUpKey}' but it was not found. Please check your .env file.`;
+    console.error(errorMessage);
+    return { error: errorMessage, type: 'configuration_error' };
+  }
+
+  if (!userId || typeof userId !== 'string' || userId.length === 0) {
+    return { error: 'Invalid userId' };
+  }
+
+  if (typeof requireAuthHeader !== 'boolean') {
+    return { error: 'requireAuthHeader must be a boolean' };
+  }
+
+  try {
+    const snappjackHelper = new SnappjackServerHelper({
+      snappApiKey: apiKey,
+      snappId
+    });
+
+    const result = await snappjackHelper.updateAuthRequirement(userId, requireAuthHeader);
+    return result;
+
+  } catch (error: unknown) {
+    console.error('Auth requirement update error:', error);
+    
+    if (error instanceof SnappjackHttpError) {
+      const body = error.body as { error?: string; type?: string };
+      return {
+        error: body.error || 'Failed to update auth requirement',
+        type: body.type || (error.status === 404 ? 'user_not_found' : 'update_failed')
+      };
+    }
+    
+    return { 
+      error: error instanceof Error ? error.message : 'Internal server error'
+    };
+  }
+}
+

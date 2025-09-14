@@ -73,7 +73,9 @@ src/
 │       ├── nextjs/        # Next.js-specific adapter
 │       └── react/         # Core React components and hooks
 ├── components/
-│   └── layout/            # Shared layout components
+│   ├── layout/            # Shared layout components
+│   └── auth/              # Authentication management components
+│       └── AuthRequirementToggle.tsx # Toggle for auth requirement settings
 └── contexts/
     └── PageConfigContext.tsx # Page configuration context for layout integration
 ```
@@ -117,6 +119,7 @@ A **Snapp** (Snappjack-enabled app) implements a **dual-interface architecture**
 - **Reusability**: Connection and credential management are shared across all Snapps
 - **Consistency**: Same functionality accessible through both human and agent interfaces
 - **Centralized Provider Management**: PageConfigContext enables page-specific configurations while maintaining a single provider instance at the layout level
+- **Flexible Security**: Built-in authentication requirement management allows users to control agent access levels
 
 ## 🎯 Creating Your Own Snapp
 
@@ -189,6 +192,59 @@ Key requirements:
 - Use `usePageConfig()` to register your Snapp configuration with the layout
 - Call `setConfig()` with your `snappId`, `appName`, and `tools` in a `useEffect`
 - Ensure the same functionality is accessible through both human GUI and agent tools
+
+## 🔐 Authentication Management
+
+The demo includes built-in authentication requirement management that allows users to control how agents connect to their Snapps.
+
+### AuthRequirementToggle Component
+
+The `AuthRequirementToggle` component provides a user-friendly interface for managing authentication requirements:
+
+```tsx
+import AuthRequirementToggle from '@/components/auth/AuthRequirementToggle';
+
+<AuthRequirementToggle 
+  snappId={snappId}
+  userId={userId}
+  onAuthRequirementChange={(requireAuth) => {
+    console.log('Auth requirement changed:', requireAuth);
+  }}
+/>
+```
+
+### Connection Details Integration
+
+The authentication toggle is integrated into the `ConnectionDetailsModal` component, accessible through the Snappjack connection interface. Users can:
+
+- **View Current Setting**: See whether authentication is currently required
+- **Toggle Requirement**: Enable/disable Bearer token authentication for their MCP connection
+- **Real-time Updates**: Changes take effect immediately without requiring reconnection
+
+### Security Considerations
+
+- **Default Secure**: Authentication is required by default for all new users
+- **User-Controlled**: Only the authenticated user can modify their own auth requirements
+- **Route Isolation**: Auth settings are specific to each (snappId, userId) pair
+- **Backward Compatible**: Existing users maintain their current authentication behavior
+
+### Implementation Example
+
+```tsx
+// In your Snapp page component
+const { connectionData } = useSafeSnappjack();
+
+// The ConnectionDetailsModal automatically includes auth management
+{showConnectionModal && connectionData && (
+  <ConnectionDetailsModal
+    isOpen={showConnectionModal}
+    onClose={() => setShowConnectionModal(false)}
+    appName={APP_NAME}
+    connectionData={connectionData}
+    availableTools={snappjackTools}
+  />
+)}
+```
 
 ## 🤖 Using Claude Code to Build Snapps
 
