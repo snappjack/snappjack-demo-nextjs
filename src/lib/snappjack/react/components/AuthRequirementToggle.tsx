@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSafeSnappjack } from '../../lib/snappjack/react/useSafeSnappjack';
+import { useSafeSnappjack } from '../useSafeSnappjack';
 
 interface AuthRequirementToggleProps {
   requireAuth: boolean;

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
-import AuthRequirementToggle from '@/components/auth/AuthRequirementToggle';
+import AuthRequirementToggle from './AuthRequirementToggle';
 
 interface ConnectionData {
   snappId?: string;
@@ -80,6 +80,7 @@ export function ConnectionDetailsModal({
       document.addEventListener('keydown', handleTabKey);
       return () => document.removeEventListener('keydown', handleTabKey);
     }
+    return undefined;
   }, [isOpen]);
 
   const handleCopyConfig = (text: string) => {
@@ -147,7 +148,7 @@ export function ConnectionDetailsModal({
         {/* Dialog */}
         <div 
           ref={modalRef}
-          className="bg-white rounded-lg shadow-xl max-w-lg w-full p-4 relative"
+          className="bg-white rounded-lg shadow-xl max-w-lg w-full p-4 relative max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-3">

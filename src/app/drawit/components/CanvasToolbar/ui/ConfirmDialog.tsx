@@ -69,6 +69,7 @@ export default function ConfirmDialog({
       document.addEventListener('keydown', handleTabKey);
       return () => document.removeEventListener('keydown', handleTabKey);
     }
+    return undefined;
   }, [isOpen]);
 
   if (!isOpen) return null;
