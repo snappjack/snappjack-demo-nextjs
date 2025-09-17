@@ -1,40 +1,38 @@
 'use client';
 
 import React, { useState } from 'react';
-import { updateAuthRequirementAction } from '../../lib/snappjack/nextjs/actions';
+import { useSafeSnappjack } from '../../lib/snappjack/react/useSafeSnappjack';
 
 interface AuthRequirementToggleProps {
-  snappId: string;
-  userId: string;
   requireAuth: boolean;
   onAuthRequirementChange?: (requireAuth: boolean) => void;
 }
 
-export default function AuthRequirementToggle({ 
-  snappId, 
-  userId, 
+export default function AuthRequirementToggle({
   requireAuth,
-  onAuthRequirementChange 
+  onAuthRequirementChange
 }: AuthRequirementToggleProps) {
   const [updating, setUpdating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { client } = useSafeSnappjack();
 
   const handleToggle = async () => {
+    if (!client) {
+      setError('Snappjack client not available');
+      return;
+    }
+
     try {
       setUpdating(true);
       setError(null);
-      
+
       const newRequireAuth = !requireAuth;
-      const result = await updateAuthRequirementAction(snappId, userId, newRequireAuth);
-      
-      if ('error' in result) {
-        setError(result.error);
-      } else {
-        // No need to update local state - parent will receive update via connection-info-updated event
-        onAuthRequirementChange?.(newRequireAuth);
-      }
+      await client.updateAuthRequirement(newRequireAuth);
+
+      // No need to update local state - parent will receive update via connection-info-updated event
+      onAuthRequirementChange?.(newRequireAuth);
     } catch (err) {
-      setError('Failed to update auth requirement');
+      setError(err instanceof Error ? err.message : 'Failed to update auth requirement');
     } finally {
       setUpdating(false);
     }

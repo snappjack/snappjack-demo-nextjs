@@ -9,6 +9,7 @@ interface SafeSnappjackReturn {
   isLoadingCredentials: boolean;
   resetCredentials: (() => Promise<void>) | null;
   openConnectionModal: (() => void) | null;
+  client: any; // Snappjack client instance
 }
 
 /**
@@ -29,6 +30,7 @@ export function useSafeSnappjack(): SafeSnappjackReturn {
       isLoadingCredentials: false,
       resetCredentials: null,
       openConnectionModal: null,
+      client: null,
     };
   }
 }

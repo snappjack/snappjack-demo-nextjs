@@ -279,9 +279,7 @@ export function ConnectionDetailsModal({
             <div>
               <h4 className="text-xs font-medium text-gray-700 mb-2">Security Settings</h4>
               <div className="bg-gray-50 rounded p-3">
-                <AuthRequirementToggle 
-                  snappId={connectionData.snappId}
-                  userId={connectionData.userId}
+                <AuthRequirementToggle
                   requireAuth={connectionData.requireAuthHeader ?? true}
                   onAuthRequirementChange={(requireAuth) => {
                     // Optionally handle the change, could update connection data

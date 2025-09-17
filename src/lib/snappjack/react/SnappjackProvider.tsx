@@ -31,6 +31,7 @@ interface SnappjackContextValue {
   isLoadingCredentials: boolean;
   resetCredentials: () => Promise<void>;
   openConnectionModal: () => void;
+  client: any; // Snappjack client instance
 }
 
 const SnappjackContext = createContext<SnappjackContextValue | undefined>(undefined);
@@ -58,7 +59,7 @@ export function SnappjackProvider({
     createUser
   });
 
-  const { status, connectionData, availableTools } = useSnappjackConnection({
+  const { status, connectionData, availableTools, client } = useSnappjackConnection({
     credentials,
     isLoadingCredentials,
     snappId,
@@ -77,7 +78,8 @@ export function SnappjackProvider({
     connectionError,
     isLoadingCredentials,
     resetCredentials,
-    openConnectionModal
+    openConnectionModal,
+    client
   };
 
   return (

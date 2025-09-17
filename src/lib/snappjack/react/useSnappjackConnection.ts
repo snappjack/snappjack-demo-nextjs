@@ -23,6 +23,7 @@ interface UseSnappjackConnectionReturn {
   status: SnappjackStatus;
   connectionData: ConnectionData | null;
   availableTools: Tool[];
+  client: Snappjack | null;
 }
 
 export const useSnappjackConnection = ({ 
@@ -140,6 +141,7 @@ export const useSnappjackConnection = ({
   return {
     status,
     connectionData,
-    availableTools
+    availableTools,
+    client: snappjackRef.current
   };
 };

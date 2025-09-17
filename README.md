@@ -204,9 +204,7 @@ The `AuthRequirementToggle` component provides a user-friendly interface for man
 ```tsx
 import AuthRequirementToggle from '@/components/auth/AuthRequirementToggle';
 
-<AuthRequirementToggle 
-  snappId={snappId}
-  userId={userId}
+<AuthRequirementToggle
   onAuthRequirementChange={(requireAuth) => {
     console.log('Auth requirement changed:', requireAuth);
   }}
@@ -224,9 +222,9 @@ The authentication toggle is integrated into the `ConnectionDetailsModal` compon
 ### Security Considerations
 
 - **Default Secure**: Authentication is required by default for all new users
-- **User-Controlled**: Only the authenticated user can modify their own auth requirements
-- **Route Isolation**: Auth settings are specific to each (snappId, userId) pair
-- **Backward Compatible**: Existing users maintain their current authentication behavior
+- **User-Controlled**: Users can modify their own auth requirements directly through the client
+- **Session-Specific**: Auth settings are managed per WebSocket connection
+- **Real-time Updates**: Changes take effect immediately through WebSocket communication
 
 ### Implementation Example
 
