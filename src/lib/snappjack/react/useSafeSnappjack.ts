@@ -1,5 +1,5 @@
 import { useSnappjack } from './SnappjackProvider';
-import type { SnappjackStatus, ConnectionData, Tool } from '@snappjack/sdk-js';
+import type { SnappjackStatus, ConnectionData, Tool, Snappjack } from '@snappjack/sdk-js';
 
 interface SafeSnappjackReturn {
   status: SnappjackStatus | null;
@@ -9,7 +9,7 @@ interface SafeSnappjackReturn {
   isLoadingCredentials: boolean;
   resetCredentials: (() => Promise<void>) | null;
   openConnectionModal: (() => void) | null;
-  client: any; // Snappjack client instance
+  client: Snappjack | null; // Snappjack client instance
 }
 
 /**

@@ -97,7 +97,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
         textArea.select();
       }
     }
-  }, [isEditing]); // Only run when isEditing changes
+  }, [isEditing, editingText?.id, editingText?.value]); // Only run when isEditing changes
   
   // Auto-size textarea height when content changes
   useEffect(() => {
@@ -106,7 +106,7 @@ const Canvas = forwardRef<CanvasHandle, CanvasProps>(({
       textArea.style.height = 'auto';
       textArea.style.height = `${textArea.scrollHeight}px`;
     }
-  }, [editingText?.value]); // Run when text value changes
+  }, [isEditing, editingText?.value]); // Run when text value changes
 
   const percentToPixelX = useCallback((percent: number): number => (percent / 100) * width, [width]);
   const percentToPixelY = useCallback((percent: number): number => (percent / 100) * height, [height]);

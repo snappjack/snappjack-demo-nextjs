@@ -2,7 +2,6 @@
 
 import { useMemo, useEffect } from 'react';
 import { useDrawit } from './hooks/useDrawit';
-import { PaintBrushIcon } from '@heroicons/react/24/outline';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useCanvasInteraction } from './hooks/useCanvasInteraction';
 import { useSafeSnappjack } from '@/lib/snappjack/nextjs';

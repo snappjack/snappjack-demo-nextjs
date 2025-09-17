@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-import { ConnectionData, SnappjackStatus, Tool } from '@snappjack/sdk-js';
+import { ConnectionData, SnappjackStatus, Tool, Snappjack } from '@snappjack/sdk-js';
 import { useSnappjackCredentials } from './useSnappjackCredentials';
 import { useSnappjackConnection } from './useSnappjackConnection';
 import { ConnectionDetailsModal } from './components/ConnectionDetailsModal';
@@ -31,7 +31,7 @@ interface SnappjackContextValue {
   isLoadingCredentials: boolean;
   resetCredentials: () => Promise<void>;
   openConnectionModal: () => void;
-  client: any; // Snappjack client instance
+  client: Snappjack | null; // Snappjack client instance
 }
 
 const SnappjackContext = createContext<SnappjackContextValue | undefined>(undefined);
