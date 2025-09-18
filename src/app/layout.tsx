@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { PageConfigProvider } from "@/contexts/PageConfigContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ConfiguredSnappjackProvider } from "@/components/layout/ConfiguredSnappjackProvider";
 
 const geistSans = Geist({
@@ -38,19 +39,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <PageConfigProvider>
-          <ConfiguredSnappjackProvider>
-            <Header />
-            <main className="flex-grow flex flex-col">
-                {children}
-            </main>
-            <Footer />
-          </ConfiguredSnappjackProvider>
-        </PageConfigProvider>
+        <ThemeProvider>
+          <PageConfigProvider>
+            <ConfiguredSnappjackProvider>
+              <Header />
+              <main className="flex-grow flex flex-col">
+                  {children}
+              </main>
+              <Footer />
+            </ConfiguredSnappjackProvider>
+          </PageConfigProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

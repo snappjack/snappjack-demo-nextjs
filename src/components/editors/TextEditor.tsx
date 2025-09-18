@@ -29,20 +29,20 @@ export default function TextEditor({
     <div className="p-3 w-64">
       {/* Text Content */}
       <div className="mb-3">
-        <label className="block text-xs font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Text Content
         </label>
         <textarea
           value={textObject.text}
           onChange={(e) => onUpdate({ text: e.target.value })}
-          className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           rows={2}
         />
       </div>
 
       {/* Font Size */}
       <div className="mb-3">
-        <label className="block text-xs font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Font Size: {textObject.fontSize.toFixed(0)}%
         </label>
         <input
@@ -59,13 +59,13 @@ export default function TextEditor({
       {/* Font Family and Weight */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Font Family
           </label>
           <select
             value={textObject.fontFamily || 'Arial'}
             onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-            className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             {fontFamilyOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -76,13 +76,13 @@ export default function TextEditor({
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Font Weight
           </label>
           <select
             value={textObject.fontWeight || 'normal'}
             onChange={(e) => onUpdate({ fontWeight: e.target.value })}
-            className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             {fontWeightOptions.map((option) => (
               <option key={option.value} value={option.value}>

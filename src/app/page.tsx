@@ -21,20 +21,20 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 pt-20">
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-5 py-16">
         <div className="text-center">
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
             Snappjack Demo Snapps
           </h1>
-          <p className="text-2xl text-gray-700 mb-6">
+          <p className="text-2xl text-gray-700 dark:text-gray-300 mb-6">
             Build Snapps that AI agents can use
           </p>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Snappjack bridges AI agents to web applications through the Model Context Protocol (MCP), 
             enabling seamless interaction between humans and AI in real-time collaborative environments.
-            <span className="block mt-4 font-medium text-purple-600">
+            <span className="block mt-4 font-medium text-purple-600 dark:text-purple-400">
               Snapps are web apps with dual interfaces: GUI for humans, MCP tools for AI agents.
             </span>
           </p>
@@ -43,30 +43,30 @@ export default function Home() {
 
       {/* Demo Showcase */}
       <section className="max-w-6xl mx-auto px-5 py-12">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
           Explore Our Demo Snapps
         </h2>
         
         <div className="grid md:grid-cols-2 gap-8">
           {/* Pipster Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
             <div className="p-8">
-              <DiceIcon className="w-10 h-10 mb-4 text-purple-600" />
-              <h3 className="text-2xl font-bold mb-3 text-gray-800">Pipster</h3>
-              <p className="text-gray-600 mb-6">
+              <DiceIcon className="w-10 h-10 mb-4 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-2xl font-bold mb-3 text-gray-800 dark:text-gray-200">Pipster</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 A dice game where AI agents can roll, keep, and strategize alongside human players
               </p>
               
               <div className="space-y-2 mb-6">
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                   <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>Roll and keep dice</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                   <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>Strategic decision making</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                   <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>Real-time state synchronization</span>
                 </div>
@@ -82,24 +82,24 @@ export default function Home() {
           </div>
 
           {/* DrawIt Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
             <div className="p-8">
-              <PaintBrushIcon className="w-10 h-10 mb-4 text-blue-600" />
-              <h3 className="text-2xl font-bold mb-3 text-gray-800">DrawIt</h3>
-              <p className="text-gray-600 mb-6">
+              <PaintBrushIcon className="w-10 h-10 mb-4 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-2xl font-bold mb-3 text-gray-800 dark:text-gray-200">DrawIt</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 A canvas app where AI agents can create visual content, draw shapes, and compose scenes
               </p>
               
               <div className="space-y-2 mb-6">
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                   <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>Draw shapes and text</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                   <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>Manipulate objects</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                   <CheckIcon className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>Export canvas images</span>
                 </div>
@@ -117,65 +117,65 @@ export default function Home() {
       </section>
 
       {/* How to Use a Snapp Section */}
-      <section className="bg-gradient-to-r from-purple-50 to-blue-50 py-16">
+      <section className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 py-16">
         <div className="max-w-6xl mx-auto px-5">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-gray-800">
+            <h2 className="text-3xl font-bold mb-4 text-gray-800 dark:text-gray-200">
               How to Use a Snapp with AI Agents
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               Snapps enable a revolutionary way of working where humans and AI agents collaborate in real-time
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                <UserIcon className="w-6 h-6 text-purple-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+              <div className="bg-purple-100 dark:bg-purple-900/50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                <UserIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="font-bold text-lg mb-2">1. Use the GUI</h3>
-              <p className="text-gray-600">
+              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">1. Use the GUI</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Interact with the Snapp directly through its web interface. Roll dice in Pipster, 
                 draw shapes in DrawIt - just like any regular web app.
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                <ChatbotIcon className="w-6 h-6 text-purple-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+              <div className="bg-purple-100 dark:bg-purple-900/50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                <ChatbotIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="font-bold text-lg mb-2">2. Connect an AI Agent</h3>
-              <p className="text-gray-600">
+              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">2. Connect an AI Agent</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Use an MCP-enabled AI like Claude Desktop. Copy the connection details from the Snapp&apos;s 
                 &quot;Agent Configuration&quot; section and add them to your AI&apos;s MCP settings.
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                <SparklesIcon className="w-6 h-6 text-purple-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+              <div className="bg-purple-100 dark:bg-purple-900/50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                <SparklesIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="font-bold text-lg mb-2">3. Collaborate with AI</h3>
-              <p className="text-gray-600">
+              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100">3. Collaborate with AI</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Ask the AI to interact with your Snapp. &quot;Draw a house&quot;, &quot;Roll until we get all sixes&quot;, 
                 or any task the Snapp supports. The AI works alongside you in real-time.
               </p>
             </div>
           </div>
 
-          <div className="mt-12 bg-white rounded-xl p-8 shadow-md">
+          <div className="mt-12 bg-white dark:bg-gray-800 rounded-xl p-8 shadow-md">
             <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
-              <div className="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mb-6">
-                <PlayIcon className="w-10 h-10 text-purple-600" />
+              <div className="bg-purple-100 dark:bg-purple-900/50 rounded-full w-20 h-20 flex items-center justify-center mb-6">
+                <PlayIcon className="w-10 h-10 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="font-bold text-2xl mb-3 text-gray-800">
+              <h3 className="font-bold text-2xl mb-3 text-gray-800 dark:text-gray-200">
                 See Snapps in Action
               </h3>
-              <p className="text-gray-600 max-w-2xl">
+              <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
                 Watch how AI agents interact with Snapps in real-time. See Claude draw pictures, 
                 play dice games, and collaborate with humans through the Snappjack bridge.
               </p>
-              <div className="mt-6 text-sm text-purple-600 font-medium">
+              <div className="mt-6 text-sm text-purple-600 dark:text-purple-400 font-medium">
                 Video demo coming soon!
               </div>
             </div>
@@ -184,44 +184,44 @@ export default function Home() {
       </section>
 
       {/* Get Started Section */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-gray-50 dark:bg-gray-900/50 py-16">
         <div className="max-w-6xl mx-auto px-5">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-gray-800">
+            <h2 className="text-3xl font-bold mb-4 text-gray-800 dark:text-gray-200">
               Build Your Own Snapps
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-600 dark:text-gray-400">
               Clone this project and create your own AI-enabled Snapps
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="text-center">
-              <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-md">
-                <span className="text-2xl font-bold text-purple-600">1</span>
+              <div className="bg-white dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-md">
+                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">1</span>
               </div>
-              <h3 className="font-semibold mb-2">Clone the Repository</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Clone the Repository</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Get the demo project from GitHub to start building
               </p>
             </div>
             
             <div className="text-center">
-              <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-md">
-                <span className="text-2xl font-bold text-purple-600">2</span>
+              <div className="bg-white dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-md">
+                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">2</span>
               </div>
-              <h3 className="font-semibold mb-2">Request API Key</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Request API Key</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Get your Snappjack API key to enable agent connections
               </p>
             </div>
             
             <div className="text-center">
-              <div className="bg-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-md">
-                <span className="text-2xl font-bold text-purple-600">3</span>
+              <div className="bg-white dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-md">
+                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">3</span>
               </div>
-              <h3 className="font-semibold mb-2">Build & Deploy</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Build & Deploy</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Create your Snapp and deploy it for agents to use
               </p>
             </div>
@@ -253,22 +253,22 @@ export default function Home() {
 
       {/* Early Access Notice */}
       <section className="max-w-6xl mx-auto px-5 py-12">
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-8 text-center border border-purple-200">
-          <LockClosedIcon className="w-8 h-8 mb-3 mx-auto text-purple-600" />
-          <h3 className="text-xl font-bold mb-2 text-gray-800">
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-8 text-center border border-purple-200 dark:border-purple-800">
+          <LockClosedIcon className="w-8 h-8 mb-3 mx-auto text-purple-600 dark:text-purple-400" />
+          <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-gray-200">
             Snappjack is in Restricted Early Access
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             <a
               href="#"
               onClick={handleEmailRequest}
-              className="text-purple-600 hover:text-purple-700 font-medium underline"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium underline"
             >
               Request an API key
             </a>
             {' '}to start building your own AI-enabled Snapps.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Join the community of developers building the future of human-AI collaboration
           </p>
         </div>

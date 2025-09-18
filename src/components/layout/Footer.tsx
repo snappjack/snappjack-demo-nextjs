@@ -2,17 +2,17 @@ import packageJson from '../../../package.json';
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 mt-auto">
+    <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-auto">
       <div className="max-w-7xl mx-auto px-5 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             © {new Date().getFullYear()} Snappjack. All rights reserved. v{packageJson.version}
           </div>
-          
+
           <div className="flex items-center space-x-6 text-sm">
             <a
               href="mailto:hello@snappjack.com"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               hello@snappjack.com
             </a>
@@ -20,7 +20,7 @@ export default function Footer() {
               href="https://github.com/snappjack/snappjack-demo-nextjs"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               GitHub
             </a>
@@ -28,7 +28,7 @@ export default function Footer() {
               href="https://www.snappjack.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               Snappjack.com
             </a>

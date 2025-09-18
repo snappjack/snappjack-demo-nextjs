@@ -50,21 +50,21 @@ export default function ToolbarDropdown({
           e.stopPropagation();
           onToggle();
         }}
-        className="p-1.5 bg-white border border-gray-300 rounded hover:border-gray-400 transition-colors flex items-center justify-center group"
+        className="p-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center justify-center group text-gray-700 dark:text-gray-300"
       >
         {trigger}
         
         {/* Tooltip */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
           {tooltip}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800 dark:border-t-gray-700"></div>
         </div>
       </button>
       
       {/* Dropdown menu */}
       {isOpen && (
         <div 
-          className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50"
+          className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg z-20"
           onClick={(e) => e.stopPropagation()}
         >
           {children}

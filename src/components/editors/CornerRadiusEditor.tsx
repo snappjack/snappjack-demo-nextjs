@@ -17,7 +17,7 @@ export default function CornerRadiusEditor({
     <div className="p-3 w-48">
       {/* Current value display */}
       <div className="mb-3">
-        <label className="block text-xs font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
           Corner Radius: {value}%
         </label>
         
@@ -41,17 +41,17 @@ export default function CornerRadiusEditor({
               const numValue = Math.max(0, Math.min(50, parseInt(e.target.value) || 0));
               onChange(numValue);
             }}
-            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded"
+            className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             min="0"
             max="50"
           />
-          <span className="text-xs text-gray-600">%</span>
+          <span className="text-xs text-gray-600 dark:text-gray-400">%</span>
         </div>
       </div>
       
       {/* Preset buttons */}
       <div className="border-t border-gray-200 pt-2">
-        <div className="text-xs text-gray-500 mb-1">Quick presets:</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Quick presets:</div>
         <div className="grid grid-cols-3 gap-1">
           {presets.map((preset) => (
             <button
@@ -60,8 +60,8 @@ export default function CornerRadiusEditor({
               className={`
                 px-1 py-1 text-xs rounded transition-colors
                 ${value === preset
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
                 }
               `}
             >

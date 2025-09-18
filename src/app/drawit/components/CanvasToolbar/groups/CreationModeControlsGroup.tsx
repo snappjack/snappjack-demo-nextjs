@@ -13,13 +13,13 @@ export default function CreationModeControlsGroup() {
   if (currentMode === 'polygon' && polygonVertexCount > 0) {
     return (
       <>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
           {polygonVertexCount} vertices
         </span>
         <button
           onClick={onFinishPolygon}
           disabled={polygonVertexCount < 3}
-          className="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed dark:disabled:text-gray-500 transition-colors"
           title="Finish polygon (minimum 3 vertices required)"
         >
           Finish
@@ -39,7 +39,7 @@ export default function CreationModeControlsGroup() {
   if (currentMode !== 'none' && currentMode !== 'polygon') {
     return (
       <>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
           {currentMode === 'text' ? 'Click to place text' : 'Click and drag to create'}
         </span>
         <button

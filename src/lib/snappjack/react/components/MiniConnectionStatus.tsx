@@ -70,7 +70,7 @@ export function MiniConnectionStatus({ status, appInitial, onClick }: MiniConnec
         <div className="flex items-center">
         {/* Agent icon */}
         <div className="relative">
-          <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" />
+          <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           {status === 'bridged' && (
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full" />
           )}
@@ -109,7 +109,7 @@ export function MiniConnectionStatus({ status, appInitial, onClick }: MiniConnec
         
         {/* App icon */}
         <div className="relative">
-          <div className="w-4 h-4 bg-gray-600 rounded-sm flex items-center justify-center">
+          <div className="w-4 h-4 bg-gray-600 dark:bg-gray-400 rounded-sm flex items-center justify-center">
             <span className="text-[8px] text-white font-bold">
               {appInitial}
             </span>
@@ -121,7 +121,7 @@ export function MiniConnectionStatus({ status, appInitial, onClick }: MiniConnec
       </div>
       
         {/* Status text */}
-        <span className="text-xs text-gray-600">
+        <span className="text-xs text-gray-600 dark:text-gray-400">
           {status === 'connecting' && 'Connecting...'}
           {status === 'connected' && 'Connected'}
           {status === 'bridged' && 'Agent active'}

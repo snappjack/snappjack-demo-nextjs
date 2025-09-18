@@ -86,7 +86,7 @@ export default function ObjectManipulationGroup() {
         title="Delete object"
         variant="danger"
       >
-        <XMarkIcon className="w-5 h-5 text-red-600" />
+        <XMarkIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
       </ToolbarButton>
     </>
   );

@@ -51,7 +51,7 @@ export default function PropertyEditorsGroup() {
           trigger={
             <div className="w-6 h-6 flex items-center justify-center">
               <div 
-                className="bg-gray-800 rounded-full"
+                className="bg-gray-800 dark:bg-gray-300 rounded-full"
                 style={{
                   width: `${Math.min(currentStrokeWidth * 1.5, 20)}px`,
                   height: `${Math.min(currentStrokeWidth * 1.5, 20)}px`
@@ -78,7 +78,7 @@ export default function PropertyEditorsGroup() {
           tooltip="Make this object's properties the default"
           title="Make this object's properties the default for new objects"
         >
-          <div className="w-5 h-5 flex flex-col items-center justify-center text-[8px] font-medium leading-tight text-gray-700">
+          <div className="w-5 h-5 flex flex-col items-center justify-center text-[8px] font-medium leading-tight text-gray-700 dark:text-gray-300">
             <span>Make</span>
             <span>Default</span>
           </div>

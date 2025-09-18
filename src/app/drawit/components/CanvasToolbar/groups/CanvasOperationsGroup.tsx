@@ -52,7 +52,7 @@ export default function CanvasOperationsGroup() {
           title="Clear all objects"
           variant="danger"
         >
-          <TrashIcon className="w-5 h-5 text-red-600" />
+          <TrashIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
         </ToolbarButton>
       )}
 

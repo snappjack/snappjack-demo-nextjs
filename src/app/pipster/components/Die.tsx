@@ -15,13 +15,14 @@ export default function Die({ value, isKept, isRolling, index, onClick }: DiePro
       <div
         onClick={handleClick}
         className={`
-          w-20 h-20 border-[3px] rounded-lg 
+          w-20 h-20 border-[3px] rounded-lg
           flex items-center justify-center
-          text-4xl font-bold bg-white
+          text-4xl font-bold bg-white dark:bg-gray-800
+          text-gray-900 dark:text-gray-100
           cursor-pointer transition-all duration-300
           select-none
           ${isRolling ? 'animate-dice-roll' : ''}
-          ${isKept ? 'bg-green-50 border-green-500' : 'border-gray-300 hover:border-blue-500 hover:scale-105'}
+          ${isKept ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400' : 'border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:scale-105'}
         `}
       >
         {value === null ? '-' : value}

@@ -20,7 +20,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
   const renderPositionProperties = () => (
     <div className="grid grid-cols-2 gap-2 mb-3">
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">X Position</label>
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">X Position</label>
         <input
           type="number"
           value={selectedObject.x.toFixed(1)}
@@ -32,7 +32,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Y Position</label>
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Y Position</label>
         <input
           type="number"
           value={selectedObject.y.toFixed(1)}
@@ -53,7 +53,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
         return (
           <>
             <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">Fill Color</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fill Color</label>
               <div className="flex gap-2">
                 <input
                   type="color"
@@ -75,7 +75,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
       })()}
 
       <div className="mb-3">
-        <label className="block text-xs font-medium text-gray-700 mb-1">Stroke Color</label>
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Stroke Color</label>
         <div className="flex gap-2">
           <input
             type="color"
@@ -98,7 +98,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
         return (
           <>
             <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Stroke Width: {obj.strokeWidth || 2}px
               </label>
               <input
@@ -120,7 +120,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
     <>
       {selectedObject.rotation !== undefined && (
         <div className="mb-3">
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
             Rotation: {(selectedObject.rotation || 0).toFixed(0)}°
           </label>
           <input
@@ -145,7 +145,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
           <>
             <div className="grid grid-cols-2 gap-2 mb-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Width (%)</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Width (%)</label>
                 <input
                   type="number"
                   value={rect.width.toFixed(1)}
@@ -157,7 +157,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Height (%)</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Height (%)</label>
                 <input
                   type="number"
                   value={rect.height.toFixed(1)}
@@ -171,7 +171,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
             </div>
 
             <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Corner Radius: {(rect.cornerRadius || 0).toFixed(0)}%
               </label>
               <input
@@ -191,7 +191,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
         const circle = selectedObject as CircleObject;
         return (
           <div className="mb-3">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Radius (%)</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Radius (%)</label>
             <input
               type="number"
               value={circle.radius.toFixed(1)}
@@ -210,7 +210,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
         return (
           <>
             <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">Text Content</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Text Content</label>
               <textarea
                 value={text.text}
                 onChange={(e) => handleChange('text', e.target.value)}
@@ -220,7 +220,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
             </div>
 
             <div className="mb-3">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Font Size: {text.fontSize.toFixed(0)}%
               </label>
               <input
@@ -235,7 +235,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
 
             <div className="grid grid-cols-2 gap-2 mb-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Font Family</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Font Family</label>
                 <select
                   value={text.fontFamily || 'Arial'}
                   onChange={(e) => handleChange('fontFamily', e.target.value)}
@@ -248,7 +248,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Font Weight</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Font Weight</label>
                 <select
                   value={text.fontWeight || 'normal'}
                   onChange={(e) => handleChange('fontWeight', e.target.value)}
@@ -268,8 +268,8 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
         const polygon = selectedObject as PolygonObject;
         return (
           <div className="mb-3">
-            <label className="block text-xs font-medium text-gray-700 mb-1">Vertices</label>
-            <div className="text-xs text-gray-600">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Vertices</label>
+            <div className="text-xs text-gray-600 dark:text-gray-400">
               {polygon.vertices.length} vertices (click on canvas to modify shape)
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
 
       {/* Name field */}
       <div className="mb-3">
-        <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
         <input
           type="text"
           value={selectedObject.name}
@@ -308,14 +308,14 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
       )}
       
       {/* Position */}
-      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Position</div>
+      <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Position</div>
       {renderPositionProperties()}
       
       {/* Transform Properties */}
       {selectedObject.rotation !== undefined && (
         <>
           <div className="border-t border-gray-200 my-3"></div>
-          <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Transform</div>
+          <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Transform</div>
           {renderTransformProperties()}
         </>
       )}
@@ -324,7 +324,7 @@ export default function PropertiesPanel({ selectedObject, onUpdateObject }: Prop
       <div className="border-t border-gray-200 my-3"></div>
       
       {/* Visual Properties */}
-      <div className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Appearance</div>
+      <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Appearance</div>
       {renderVisualProperties()}
     </div>
   );

@@ -59,35 +59,35 @@ export default function DicePage() {
   const { connectionError, resetCredentials } = useSafeSnappjack();
 
   return (
-    <div className="bg-gray-100 min-h-0 flex-1 py-8">
+    <div className="bg-gray-100 dark:bg-gray-900 min-h-0 flex-1 py-8">
       <div className="max-w-7xl mx-auto px-5">
 
         {/* Connection Error */}
         {connectionError && (
           <div className="mb-5">
-            <SnappjackConnectionError 
-              error={connectionError} 
-              onResetCredentials={resetCredentials || (() => {})} 
+            <SnappjackConnectionError
+              error={connectionError}
+              onResetCredentials={resetCredentials || (() => {})}
             />
           </div>
         )}
 
       {/* Game Card */}
-      <div className="bg-white p-8 rounded-lg shadow-md mb-5">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-5">
         <div className="max-w-2xl mx-auto">
           <div className="flex justify-center mb-4">
             <div className="bg-gradient-to-br from-purple-500 to-purple-700 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
               Snappjack Demo App
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-bold text-center text-gray-800 dark:text-gray-200 mb-2 flex items-center justify-center gap-2">
             <DiceIcon className="w-8 h-8" />
             {APP_NAME} - Agentic Dice
           </h1>
-          <p className="text-center text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-center text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
             A simple app demonstrating how web applications can provide both a traditional GUI for
             direct user interaction and expose functionality through the{' '}
-            <a href="https://www.snappjack.com" target="_blank" rel="noopener" className="text-blue-500 hover:underline">
+            <a href="https://www.snappjack.com" target="_blank" rel="noopener" className="text-blue-500 dark:text-blue-400 hover:underline">
               Snappjack
             </a>{' '}
             SDK, enabling AI agents to connect to live sessions via the standard MCP protocol.

@@ -42,10 +42,10 @@ export default function AuthRequirementToggle({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-gray-900">
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
             MCP Authentication
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {requireAuth ? 'Bearer token required' : 'No authentication required'}
           </span>
         </div>
@@ -53,8 +53,8 @@ export default function AuthRequirementToggle({
         <button
           onClick={handleToggle}
           disabled={updating}
-          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            requireAuth ? 'bg-blue-600' : 'bg-gray-200'
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+            requireAuth ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
           } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <span className="sr-only">Toggle authentication requirement</span>
@@ -68,14 +68,14 @@ export default function AuthRequirementToggle({
       </div>
       
       {error && (
-        <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+        <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
           {error}
         </div>
       )}
       
-      <div className="text-xs text-gray-500 min-h-[20px] flex items-center">
+      <div className="text-xs text-gray-500 dark:text-gray-400 min-h-[20px] flex items-center">
         {updating ? (
-          <span className="text-blue-600">Updating...</span>
+          <span className="text-blue-600 dark:text-blue-400">Updating...</span>
         ) : requireAuth ? (
           <span>🔒 Agents must provide Bearer token to access MCP endpoint</span>
         ) : (

@@ -11,15 +11,15 @@ interface SnappjackConnectionErrorProps {
 
 export function SnappjackConnectionError({ error, onResetCredentials }: SnappjackConnectionErrorProps) {
   return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+    <div className="bg-red-50 dark:bg-gray-800 border border-red-200 dark:border-red-500 rounded-lg p-4">
       <div className="flex items-start space-x-3">
-        <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
+        <ExclamationTriangleIcon className="w-6 h-6 text-red-500 dark:text-red-400" />
         <div className="flex-1">
-          <h3 className="font-semibold text-red-800 mb-1">Connection Problem</h3>
-          <p className="text-red-700 mb-3">{error.message}</p>
+          <h3 className="font-semibold text-red-800 dark:text-gray-100 mb-1">Connection Problem</h3>
+          <p className="text-red-700 dark:text-gray-300 mb-3">{error.message}</p>
           {error.canResetCredentials ? (
             <div className="space-y-2">
-              <p className="text-red-600 text-sm">
+              <p className="text-red-600 dark:text-gray-400 text-sm">
                 Your credentials may be invalid. Try getting new credentials:
               </p>
               <button
@@ -30,9 +30,9 @@ export function SnappjackConnectionError({ error, onResetCredentials }: Snappjac
               </button>
             </div>
           ) : (
-            <p className="text-red-600 text-sm">
-              {error.type === 'server_unreachable' 
-                ? 'The server may be down. Please wait and the app will retry automatically.' 
+            <p className="text-red-600 dark:text-gray-400 text-sm">
+              {error.type === 'server_unreachable'
+                ? 'The server may be down. Please wait and the app will retry automatically.'
                 : 'Please check your connection and try refreshing the page.'}
             </p>
           )}

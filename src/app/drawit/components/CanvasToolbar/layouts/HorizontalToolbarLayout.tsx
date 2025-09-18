@@ -35,18 +35,18 @@ export default function HorizontalToolbarLayout() {
       )}
 
       {/* Creation tools section */}
-      <div className="flex items-center gap-1 border-l border-gray-300 pl-3">
+      <div className="flex items-center gap-1 border-l border-gray-300 dark:border-gray-600 pl-3">
         <CreationToolsGroup />
       </div>
       
       {/* Fill, Stroke, Stroke Width, and Make Default section */}
-      <div className="flex items-center gap-1 border-l border-gray-300 pl-3">
+      <div className="flex items-center gap-1 border-l border-gray-300 dark:border-gray-600 pl-3">
         <PropertyEditorsGroup />
       </div>
 
       {/* Object Manipulation Tools section */}
       {selectedObject && onDeleteObject && onReorderObject && (
-        <div className="flex items-center gap-1 border-l border-gray-300 pl-3">
+        <div className="flex items-center gap-1 border-l border-gray-300 dark:border-gray-600 pl-3">
           <ObjectManipulationGroup />
         </div>
       )}
@@ -54,7 +54,7 @@ export default function HorizontalToolbarLayout() {
       {/* Creation mode controls */}
       {((currentMode === 'polygon' && polygonVertexCount > 0) || 
         (currentMode !== 'none' && currentMode !== 'polygon')) && (
-        <div className="flex items-center gap-1 border-l border-gray-300 pl-3">
+        <div className="flex items-center gap-1 border-l border-gray-300 dark:border-gray-600 pl-3">
           <CreationModeControlsGroup />
         </div>
       )}

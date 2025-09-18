@@ -19,8 +19,8 @@ export default function KeepDieStatus({ diceValues, keptDice }: GameStatusProps)
   }
 
   return (
-    <div className="text-center mb-5 p-4 bg-gray-50 rounded-lg">
-      <div className="text-lg font-medium text-gray-700">
+    <div className="text-center mb-5 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
         {statusText}
       </div>
     </div>

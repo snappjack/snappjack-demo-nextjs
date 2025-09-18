@@ -106,9 +106,9 @@ export default function DrawItPage() {
   const { connectionError, resetCredentials } = useSafeSnappjack();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-150px)] z-50">
+    <div className="flex flex-col h-[calc(100vh-150px)] z-20">
       {/* Fixed Toolbar directly below header */}
-      <div className="bg-white border-b border-gray-200 py-3 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-3 shadow-sm">
         <CanvasToolbar
           currentMode={drawingState.creationMode}
           onModeChange={setCreationMode}
@@ -134,7 +134,7 @@ export default function DrawItPage() {
 
       {/* Connection Error */}
       {connectionError && (
-        <div className="bg-red-50 border border-red-200 p-4">
+        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 p-4">
           <SnappjackConnectionError
             error={connectionError}
             onResetCredentials={resetCredentials || (() => {})}
@@ -143,7 +143,7 @@ export default function DrawItPage() {
       )}
 
       {/* Main Canvas Area - takes remaining space */}
-      <div className="flex-1 bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="flex-1 bg-gray-100 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
         <Canvas
           ref={canvasRef}
           objects={drawingState.objects}
